@@ -474,7 +474,7 @@
     let finishOrder = []; // track graduation order
     let totalTurns = 0; // global turn counter
     let difficulty = 'hard'; // 'easy' or 'hard'
-    let usedQuestions = { elementary: [], middle: [], high: [] };
+    let usedQuestions = { elementary: [], middle: [], high: [], easyhs: [] };
 
     const characters = [
         { name: 'Alex', color: '#FFDBAC', hair: '#8B4513', clothes: '#4A90D9' },
@@ -526,82 +526,33 @@
             { q: 'Listen and spell the word!', a: 'calendar', subject: 'Spelling', spoken: 'calendar', hint: 'It ends with "-ar" not "-er"', explain: 'Calendar ends with "-ar": C-A-L-E-N-D-A-R. Not "calender!"' },
             { q: 'Listen and spell the word!', a: 'exercise', subject: 'Spelling', spoken: 'exercise', hint: 'It starts with "exer-"', explain: 'Exercise = E-X-E-R-C-I-S-E. Remember the "er" before the "c!"' },
             { q: 'Listen and spell the word!', a: 'February', subject: 'Spelling', spoken: 'february', hint: 'It has two r\'s that people forget', explain: 'February has a sneaky first R: F-E-B-R-U-A-R-Y. Most people skip it!' },
-            { q: 'Listen and spell the word!', a: 'weight', subject: 'Spelling', spoken: 'weight', hint: '"ei" not "ie" — and silent "gh"', explain: 'Weight = W-E-I-G-H-T. The "gh" is silent and "ei" makes an "ay" sound!' },
-            { q: 'Listen and spell the word!', a: 'piece', subject: 'Spelling', spoken: 'piece', hint: 'A PIEce of PIE', explain: 'Piece has PIE in it! P-I-E-C-E. Think: a piece of pie!' },
-            { q: 'Listen and spell the word!', a: 'minute', subject: 'Spelling', spoken: 'minute', hint: 'Ends with "-ute"', explain: 'Minute = M-I-N-U-T-E. Sounds like "minit" but spelled differently!' },
-            { q: 'Listen and spell the word!', a: 'certain', subject: 'Spelling', spoken: 'certain', hint: 'Starts with "cer-"', explain: 'Certain = C-E-R-T-A-I-N. The "c" makes an "s" sound here!' },
-            { q: 'Listen and spell the word!', a: 'daughter', subject: 'Spelling', spoken: 'daughter', hint: 'It has "augh" like "caught"', explain: 'Daughter = D-A-U-G-H-T-E-R. Same "augh" pattern as "caught!"' },
-            { q: 'Listen and spell the word!', a: 'stomach', subject: 'Spelling', spoken: 'stomach', hint: 'Ends with "-ach" not "-ack"', explain: 'Stomach = S-T-O-M-A-C-H. The "ch" makes a "k" sound!' },
-            { q: 'Listen and spell the word!', a: 'kitchen', subject: 'Spelling', spoken: 'kitchen', hint: 'Starts with "kit-"', explain: 'Kitchen = K-I-T-C-H-E-N. A kit for your chen... well, just memorize it!' },
-            { q: 'Listen and spell the word!', a: 'straight', subject: 'Spelling', spoken: 'straight', hint: 'It has 8 letters and "aigh" in the middle', explain: 'Straight = S-T-R-A-I-G-H-T. That "aight" is the trickiest part!' },
-            { q: 'Listen and spell the word!', a: 'weather', subject: 'Spelling', spoken: 'weather', hint: 'Don\'t confuse it with "whether"!', explain: 'Weather (rain/sun) = W-E-A-T-H-E-R. "Whether" means "if!"' },
-            { q: 'Listen and spell the word!', a: 'half', subject: 'Spelling', spoken: 'half', hint: 'The "l" is silent!', explain: 'Half = H-A-L-F. You don\'t say the L but it\'s there!' },
-            { q: 'Listen and spell the word!', a: 'every', subject: 'Spelling', spoken: 'every', hint: 'Starts with "ev-"', explain: 'Every = E-V-E-R-Y. Some people say "evry" but there\'s an E in the middle!' },
-            { q: 'Listen and spell the word!', a: 'famous', subject: 'Spelling', spoken: 'famous', hint: 'Ends with "-ous"', explain: 'Famous = F-A-M-O-U-S. Ends with "-ous" like "dangerous!"' },
-            { q: 'Listen and spell the word!', a: 'ocean', subject: 'Spelling', spoken: 'ocean', hint: 'Only 5 letters!', explain: 'Ocean = O-C-E-A-N. Short word but the "ce" makes a "sh" sound!' },
-            { q: 'Listen and spell the word!', a: 'machine', subject: 'Spelling', spoken: 'machine', hint: 'The "ch" sounds like "sh"', explain: 'Machine = M-A-C-H-I-N-E. The "ch" makes a "sh" sound — it\'s from French!' },
-            { q: 'Listen and spell the word!', a: 'color', subject: 'Spelling', spoken: 'color', hint: 'Just 5 letters, no "u"', explain: 'Color = C-O-L-O-R. In American English, no "u" needed!' },
-            { q: 'Listen and spell the word!', a: 'knowledge', subject: 'Spelling', spoken: 'knowledge', hint: 'The "k" is silent!', explain: 'Knowledge = K-N-O-W-L-E-D-G-E. Both the K and the W are in there!' },
-            { q: 'Listen and spell the word!', a: 'sentence', subject: 'Spelling', spoken: 'sentence', hint: 'Ends with "-ence"', explain: 'Sentence = S-E-N-T-E-N-C-E. Ends with "-ence" not "-ense!"' },
-            { q: 'Listen and spell the word!', a: 'cousin', subject: 'Spelling', spoken: 'cousin', hint: 'Rhymes with "dozen"', explain: 'Cousin = C-O-U-S-I-N. The "ou" makes an "uh" sound!' },
-            { q: 'Listen and spell the word!', a: 'muscle', subject: 'Spelling', spoken: 'muscle', hint: 'The "c" is silent!', explain: 'Muscle = M-U-S-C-L-E. The C is silent — like a hidden muscle!' },
-            { q: 'Listen and spell the word!', a: 'captain', subject: 'Spelling', spoken: 'captain', hint: 'Starts with "cap-"', explain: 'Captain = C-A-P-T-A-I-N. The leader of the ship!' },
-            { q: 'Listen and spell the word!', a: 'sandwich', subject: 'Spelling', spoken: 'sandwich', hint: 'Named after a real person!', explain: 'Sandwich = S-A-N-D-W-I-C-H. Named after the Earl of Sandwich!' },
-            { q: 'Listen and spell the word!', a: 'bicycle', subject: 'Spelling', spoken: 'bicycle', hint: '"bi" means two (two wheels!)', explain: 'Bicycle = B-I-C-Y-C-L-E. "Bi" means two — two wheels!' },
-            { q: 'Listen and spell the word!', a: 'vegetable', subject: 'Spelling', spoken: 'vegetable', hint: 'Has 9 letters, starts with "veg"', explain: 'Vegetable = V-E-G-E-T-A-B-L-E. Don\'t skip the middle letters!' },
-            { q: 'Listen and spell the word!', a: 'chocolate', subject: 'Spelling', spoken: 'chocolate', hint: 'Starts with "choc-"', explain: 'Chocolate = C-H-O-C-O-L-A-T-E. Yummy AND hard to spell!' },
-            { q: 'Listen and spell the word!', a: 'important', subject: 'Spelling', spoken: 'important', hint: 'Ends with "-ant"', explain: 'Important = I-M-P-O-R-T-A-N-T. Ends with "-ant" not "-ent!"' },
-            // ===== MATH (60 questions) =====
-            { q: 'What is 7 x 8?', a: '56', subject: 'Math', hint: '5, 6, 7, 8 — the numbers go in order!', explain: '7 × 8 = 56. Cool trick: 5-6-7-8!' },
-            { q: 'What is 9 x 6?', a: '54', subject: 'Math', hint: '9 x 6 is the same as 6 x 9', explain: '9 × 6 = 54. Nines trick: fold your 6th finger — 5 left, 4 right = 54!' },
-            { q: 'What is 12 x 5?', a: '60', subject: 'Math', hint: 'Multiply by 10 and cut in half', explain: '12 × 5 = 60. Quick way: 12 × 10 = 120, half = 60!' },
+
+            // ===== MATH - Addition & Subtraction (25 questions) =====
             { q: 'What is 48 + 37?', a: '85', subject: 'Math', hint: 'Add 48 + 30 first, then add 7', explain: '48 + 37 = 85. Break it: 48 + 30 = 78, then 78 + 7 = 85!' },
             { q: 'What is 100 - 46?', a: '54', subject: 'Math', hint: 'What plus 46 equals 100?', explain: '100 - 46 = 54. Think: 46 + 54 = 100!' },
-            { q: 'What is 8 x 9?', a: '72', subject: 'Math', hint: 'Use the nines finger trick!', explain: '8 × 9 = 72. Fold your 8th finger: 7 left, 2 right = 72!' },
-            { q: 'What is 6 x 7?', a: '42', subject: 'Math', hint: 'Ends in 2', explain: '6 × 7 = 42. The answer to life, the universe, and everything!' },
-            { q: 'What is 11 x 11?', a: '121', subject: 'Math', hint: '11 squared — digits go 1, 2, 1', explain: '11 × 11 = 121. Pattern: 1-2-1!' },
-            { q: 'What is 144 divided by 12?', a: '12', subject: 'Math', hint: 'What number times itself gives 144?', explain: '144 ÷ 12 = 12. A perfect square!' },
             { q: 'What is 25 + 68?', a: '93', subject: 'Math', hint: 'Add 25 + 70, then subtract 2', explain: '25 + 68 = 93. Try: 25 + 70 = 95, minus 2 = 93!' },
             { q: 'What is 200 - 85?', a: '115', subject: 'Math', hint: 'Count up from 85 to 200', explain: '200 - 85 = 115. Count: 85 + 15 = 100, + 100 = 200!' },
-            { q: 'What is 3 x 15?', a: '45', subject: 'Math', hint: '15 + 15 + 15', explain: '3 × 15 = 45. Add 15 three times!' },
             { q: 'What is 99 + 1?', a: '100', subject: 'Math', hint: 'Right after 99!', explain: '99 + 1 = 100!' },
-            { q: 'What is half of 64?', a: '32', subject: 'Math', hint: 'Split 64 into two equal groups', explain: 'Half of 64 = 32. Two groups of 32 make 64!' },
-            { q: 'What is 9 x 9?', a: '81', subject: 'Math', hint: 'A number in the 80s', explain: '9 × 9 = 81. Nine squared!' },
             { q: 'What is 150 + 75?', a: '225', subject: 'Math', hint: '150 + 50 = 200, then add 25 more', explain: '150 + 75 = 225!' },
-            { q: 'What is 5 x 12?', a: '60', subject: 'Math', hint: 'How many minutes in an hour?', explain: '5 × 12 = 60. Same as minutes in one hour!' },
             { q: 'What is 1000 - 350?', a: '650', subject: 'Math', hint: 'Start from 1000 and subtract', explain: '1000 - 350 = 650. Think: 1000 - 300 = 700, then - 50 = 650!' },
-            { q: 'What is 4 x 25?', a: '100', subject: 'Math', hint: 'Four quarters make a dollar!', explain: '4 × 25 = 100. Like four quarters!' },
-            { q: 'What is 72 divided by 8?', a: '9', subject: 'Math', hint: '8 times what equals 72?', explain: '72 ÷ 8 = 9. Because 8 × 9 = 72!' },
-            { q: 'What is 56 divided by 7?', a: '8', subject: 'Math', hint: '7 times what equals 56?', explain: '56 ÷ 7 = 8!' },
             { q: 'What is 13 + 29?', a: '42', subject: 'Math', hint: 'Add 13 + 30, then subtract 1', explain: '13 + 29 = 42!' },
-            { q: 'What is 8 x 8?', a: '64', subject: 'Math', hint: 'Same as a chess board!', explain: '8 × 8 = 64. A chess board has 64 squares!' },
-            { q: 'What is 12 x 12?', a: '144', subject: 'Math', hint: 'The last one on the times table!', explain: '12 × 12 = 144. The biggest product on a 12×12 times table!' },
             { q: 'What is 500 - 125?', a: '375', subject: 'Math', hint: '500 - 100 = 400, then subtract 25 more', explain: '500 - 125 = 375!' },
-            { q: 'What is 7 x 7?', a: '49', subject: 'Math', hint: 'One less than 50', explain: '7 × 7 = 49!' },
-            { q: 'What is 9 x 7?', a: '63', subject: 'Math', hint: 'Nines trick: fold finger 7', explain: '9 × 7 = 63. Fold 7th finger: 6 left, 3 right!' },
             { q: 'What is 45 + 55?', a: '100', subject: 'Math', hint: 'They add up to a nice round number', explain: '45 + 55 = 100!' },
-            { q: 'What is 6 x 8?', a: '48', subject: 'Math', hint: 'Close to 50', explain: '6 × 8 = 48!' },
             { q: 'What is 300 - 178?', a: '122', subject: 'Math', hint: 'Count up from 178', explain: '300 - 178 = 122. 178 + 22 = 200, + 100 = 300!' },
-            { q: 'What is 4 x 9?', a: '36', subject: 'Math', hint: 'Same as 6 x 6!', explain: '4 × 9 = 36. Fun fact: 6 × 6 is also 36!' },
-            { q: 'What is half of 250?', a: '125', subject: 'Math', hint: 'Split 250 into two groups', explain: 'Half of 250 = 125!' },
-            { q: 'What is 11 x 7?', a: '77', subject: 'Math', hint: 'Double digit!', explain: '11 × 7 = 77. Eleven times any single digit — double it: 77!' },
-            { q: 'What is 63 divided by 9?', a: '7', subject: 'Math', hint: '9 times what equals 63?', explain: '63 ÷ 9 = 7!' },
-            { q: 'What is 15 x 4?', a: '60', subject: 'Math', hint: '15 + 15 + 15 + 15', explain: '15 × 4 = 60!' },
-            { q: 'What is 81 divided by 9?', a: '9', subject: 'Math', hint: 'The square root of 81', explain: '81 ÷ 9 = 9!' },
             { q: 'What is 160 + 40?', a: '200', subject: 'Math', hint: 'Almost 200!', explain: '160 + 40 = 200!' },
-            { q: 'What is 3 x 8?', a: '24', subject: 'Math', hint: 'Hours in one day!', explain: '3 × 8 = 24. Same as hours in a day!' },
-            { q: 'What is double 35?', a: '70', subject: 'Math', hint: '35 + 35', explain: 'Double 35 = 70. Just add it to itself!' },
-            { q: 'What is 10 x 10?', a: '100', subject: 'Math', hint: 'Just add a zero!', explain: '10 × 10 = 100!' },
             { q: 'What is 132 - 48?', a: '84', subject: 'Math', hint: '132 - 50 + 2', explain: '132 - 48 = 84!' },
-            { q: 'What is 5 x 5 x 4?', a: '100', subject: 'Math', hint: '5 x 5 = 25, then x 4', explain: '5 × 5 = 25, × 4 = 100!' },
-            { q: 'What is 90 divided by 10?', a: '9', subject: 'Math', hint: 'Just remove the zero!', explain: '90 ÷ 10 = 9!' },
             { q: 'What is 17 + 8?', a: '25', subject: 'Math', hint: '17 + 3 = 20, then add 5', explain: '17 + 8 = 25!' },
-            { q: 'What is 6 x 6?', a: '36', subject: 'Math', hint: 'Six squared', explain: '6 × 6 = 36!' },
-            { q: 'What is 1000 divided by 4?', a: '250', subject: 'Math', hint: 'Split 1000 into 4 groups', explain: '1000 ÷ 4 = 250!' },
             { q: 'What is 75 + 48?', a: '123', subject: 'Math', hint: '75 + 50 - 2', explain: '75 + 48 = 123. Try 75 + 50 = 125, minus 2 = 123!' },
-            { q: 'What is 9 x 12?', a: '108', subject: 'Math', hint: '9 x 10 = 90, + 9 x 2 = 18', explain: '9 × 12 = 108!' },
-            { q: 'What is 100 divided by 5?', a: '20', subject: 'Math', hint: 'Five groups from 100', explain: '100 ÷ 5 = 20!' },
             { q: 'What is 55 - 19?', a: '36', subject: 'Math', hint: '55 - 20 + 1', explain: '55 - 19 = 36. Subtract 20 and add 1 back!' },
+            { q: 'What is 34 + 27?', a: '61', subject: 'Math', hint: '34 + 30 - 3', explain: '34 + 27 = 61!' },
+            { q: 'What is 80 - 33?', a: '47', subject: 'Math', hint: '80 - 30 = 50, then - 3', explain: '80 - 33 = 47!' },
+            { q: 'What is 250 + 150?', a: '400', subject: 'Math', hint: 'Two hundreds plus one fifty', explain: '250 + 150 = 400!' },
+            { q: 'What is 72 - 28?', a: '44', subject: 'Math', hint: '72 - 30 + 2', explain: '72 - 28 = 44!' },
+            { q: 'What is 36 + 47?', a: '83', subject: 'Math', hint: '36 + 50 - 3', explain: '36 + 47 = 83!' },
+            { q: 'What is 91 - 54?', a: '37', subject: 'Math', hint: '91 - 50 = 41, then - 4', explain: '91 - 54 = 37!' },
+            { q: 'What is 123 + 77?', a: '200', subject: 'Math', hint: 'Counts up to a round number!', explain: '123 + 77 = 200!' },
+            { q: 'What is 400 - 175?', a: '225', subject: 'Math', hint: '400 - 200 + 25', explain: '400 - 175 = 225!' },
+            { q: 'What is 500 - 250?', a: '250', subject: 'Math', hint: 'Exactly half of 500!', explain: '500 - 250 = 250. Split it right in the middle!' },
             // ===== GEOGRAPHY (30 questions) =====
             { q: 'How many continents are there?', a: '7', subject: 'Geography', hint: 'Think of the big land masses', explain: 'There are 7 continents: Africa, Antarctica, Asia, Australia, Europe, North America, South America!' },
             { q: 'What is the largest ocean?', a: 'pacific', subject: 'Geography', hint: 'Its name means "peaceful"', explain: 'The Pacific Ocean covers more area than all land on Earth combined!' },
@@ -628,11 +579,7 @@
             { q: 'What country has the most people?', a: 'india', subject: 'Geography', hint: 'It passed China recently!', explain: 'India has over 1.4 billion people — the most of any country!' },
             { q: 'The Amazon River is on what continent?', a: 'south america', subject: 'Geography', hint: 'Same continent as Brazil', explain: 'The Amazon River flows through South America — mostly through Brazil!' },
             { q: 'What is the capital of England?', a: 'london', subject: 'Geography', hint: 'Big Ben and the Thames River are here', explain: 'London is the capital of England and the United Kingdom!' },
-            { q: 'What are the 4 main compass directions?', a: 'north south east west', subject: 'Geography', hint: 'Never Eat Soggy Waffles!', explain: 'North, South, East, West — remember: Never Eat Soggy Waffles!' },
-            { q: 'What state is the Grand Canyon in?', a: 'arizona', subject: 'Geography', hint: 'A hot desert state', explain: 'The Grand Canyon is in Arizona — carved by the Colorado River!' },
-            { q: 'What two countries share the longest border?', a: 'usa canada', subject: 'Geography', hint: 'One is above the other in North America', explain: 'The USA and Canada share the longest border in the world — 5,525 miles!' },
-            { q: 'What continent is Japan on?', a: 'asia', subject: 'Geography', hint: 'The largest continent', explain: 'Japan is an island country in Asia!' },
-            { q: 'What is the smallest state in the USA?', a: 'rhode island', subject: 'Geography', hint: 'It\'s in New England and has "island" in its name', explain: 'Rhode Island is the tiniest state — you could fit 425 of them inside Alaska!' },
+
             // ===== SCIENCE (60 questions) =====
             { q: 'What planet is closest to the Sun?', a: 'mercury', subject: 'Science', hint: 'Named after a liquid metal', explain: 'Mercury is closest — super hot on one side, freezing on the other!' },
             { q: 'What gas do plants breathe in?', a: 'carbon dioxide', subject: 'Science', hint: 'It\'s what you breathe OUT', explain: 'Plants breathe in carbon dioxide and give us oxygen. Teamwork!' },
@@ -659,21 +606,6 @@
             { q: 'What type of animal is a frog?', a: 'amphibian', subject: 'Science', hint: 'Lives on land AND in water', explain: 'Frogs are amphibians — they can live both in water and on land!' },
             { q: 'What is the boiling point of water in Fahrenheit?', a: '212', subject: 'Science', hint: 'It\'s over 200 degrees', explain: 'Water boils at 212°F (100°C)!' },
             { q: 'What organ lets you see?', a: 'eyes', subject: 'Science', hint: 'You have two of them on your face', explain: 'Your eyes detect light and send signals to your brain!' },
-            { q: 'What is a group of lions called?', a: 'pride', subject: 'Science', hint: 'The same word that means being proud', explain: 'A group of lions is called a pride!' },
-            { q: 'What planet do we live on?', a: 'earth', subject: 'Science', hint: 'The third rock from the Sun!', explain: 'We live on Earth — the third planet from the Sun!' },
-            { q: 'What is the largest organ in the human body?', a: 'skin', subject: 'Science', hint: 'It covers your entire body!', explain: 'Your skin is the largest organ — it protects everything inside!' },
-            { q: 'How many days does it take Earth to orbit the Sun?', a: '365', subject: 'Science', hint: 'Same as days in a year!', explain: 'It takes 365 days — that\'s why a year has 365 days!' },
-            { q: 'What are the three states of matter?', a: 'solid liquid gas', subject: 'Science', hint: 'Ice → Water → Steam', explain: 'Solid, liquid, and gas! Ice melts to water, which boils to steam.' },
-            { q: 'What gas makes up most of Earth\'s atmosphere?', a: 'nitrogen', subject: 'Science', hint: 'It\'s about 78% of the air!', explain: 'Nitrogen makes up 78% of our air! Oxygen is only 21%.' },
-            { q: 'What is the largest insect group?', a: 'beetles', subject: 'Science', hint: 'Not the band — the bugs!', explain: 'Beetles make up about 25% of all known animal species!' },
-            { q: 'What do bees make?', a: 'honey', subject: 'Science', hint: 'It\'s sweet and golden', explain: 'Bees make honey from flower nectar — and they pollinate plants too!' },
-            { q: 'What is baby cow called?', a: 'calf', subject: 'Science', hint: 'Rhymes with "half"', explain: 'A baby cow is a calf! Baby horses are foals, baby sheep are lambs.' },
-            { q: 'How many wings does a butterfly have?', a: '4', subject: 'Science', hint: 'Two on each side!', explain: 'Butterflies have 4 wings — two on each side!' },
-            { q: 'What is the fastest land animal?', a: 'cheetah', subject: 'Science', hint: 'An African big cat with spots', explain: 'Cheetahs can run up to 70 mph — the fastest land animal!' },
-            { q: 'What do plants need to grow? (besides water)', a: 'sunlight', subject: 'Science', hint: 'It comes from the sky during the day', explain: 'Plants need sunlight to make food through photosynthesis!' },
-            { q: 'What covers about 71% of Earth\'s surface?', a: 'water', subject: 'Science', hint: 'Most of our planet is blue!', explain: 'Water covers about 71% of Earth — that\'s why it looks blue from space!' },
-            { q: 'What type of animal lays eggs and has feathers?', a: 'bird', subject: 'Science', hint: 'They can usually fly!', explain: 'Birds lay eggs, have feathers, and most can fly!' },
-            { q: 'What is the center of an atom called?', a: 'nucleus', subject: 'Science', hint: 'Starts with "nuc-"', explain: 'The nucleus is the center of an atom — it has protons and neutrons!' },
         ],
         middle: [
             // ===== ALGEBRA (20 questions) =====
@@ -868,6 +800,27 @@
             { q: 'What is the Pythagorean theorem formula?', a: 'a2 + b2 = c2', subject: 'Math', hint: 'Two sides squared = hypotenuse squared', explain: 'a² + b² = c² for right triangles!' },
             { q: 'What is RNA\'s main function?', a: 'protein synthesis', subject: 'Biology', hint: 'It carries DNA\'s instructions', explain: 'RNA reads DNA instructions and helps build proteins!' },
             { q: 'What is the quadratic formula used for?', a: 'solving equations', subject: 'Math', hint: 'Works on ax² + bx + c = 0', explain: 'The quadratic formula solves any equation in the form ax² + bx + c = 0!' },
+            // ===== TIMES TABLES & DIVISION (20 questions) =====
+            { q: 'What is 7 × 8?', a: '56', subject: 'Math', hint: '5, 6, 7, 8 — the numbers go in order!', explain: '7 × 8 = 56. Cool trick: 5-6-7-8!' },
+            { q: 'What is 9 × 6?', a: '54', subject: 'Math', hint: 'Nines trick: fold your 6th finger', explain: '9 × 6 = 54. Fold 6th finger: 5 left, 4 right = 54!' },
+            { q: 'What is 12 × 5?', a: '60', subject: 'Math', hint: 'Multiply by 10 and cut in half', explain: '12 × 5 = 60. Quick: 12 × 10 = 120, half = 60!' },
+            { q: 'What is 8 × 9?', a: '72', subject: 'Math', hint: 'Nines trick: fold your 8th finger', explain: '8 × 9 = 72. Fold 8th finger: 7 left, 2 right = 72!' },
+            { q: 'What is 6 × 7?', a: '42', subject: 'Math', hint: 'The answer to life, the universe, and everything!', explain: '6 × 7 = 42!' },
+            { q: 'What is 144 ÷ 12?', a: '12', subject: 'Math', hint: 'What times itself gives 144?', explain: '144 ÷ 12 = 12. A perfect square!' },
+            { q: 'What is 4 × 25?', a: '100', subject: 'Math', hint: 'Four quarters make a dollar!', explain: '4 × 25 = 100. Like four quarters!' },
+            { q: 'What is 72 ÷ 8?', a: '9', subject: 'Math', hint: '8 times what equals 72?', explain: '72 ÷ 8 = 9. Because 8 × 9 = 72!' },
+            { q: 'What is 56 ÷ 7?', a: '8', subject: 'Math', hint: '7 times what equals 56?', explain: '56 ÷ 7 = 8!' },
+            { q: 'What is 8 × 8?', a: '64', subject: 'Math', hint: 'Same as the squares on a chess board!', explain: '8 × 8 = 64. A chess board has 64 squares!' },
+            { q: 'What is 12 × 12?', a: '144', subject: 'Math', hint: 'The last on the times table!', explain: '12 × 12 = 144. The biggest product on a 12×12 times table!' },
+            { q: 'What is 63 ÷ 9?', a: '7', subject: 'Math', hint: '9 times what equals 63?', explain: '63 ÷ 9 = 7!' },
+            { q: 'What is 100 ÷ 5?', a: '20', subject: 'Math', hint: 'Five equal groups from 100', explain: '100 ÷ 5 = 20!' },
+            { q: 'What is 9 × 12?', a: '108', subject: 'Math', hint: '9 × 10 = 90, + 9 × 2 = 18', explain: '9 × 12 = 108!' },
+            { q: 'What is 81 ÷ 9?', a: '9', subject: 'Math', hint: 'The square root of 81', explain: '81 ÷ 9 = 9!' },
+            { q: 'What is 11 × 11?', a: '121', subject: 'Math', hint: 'Digits go 1, 2, 1', explain: '11 × 11 = 121. Pattern: 1-2-1!' },
+            { q: 'What is 7 × 7?', a: '49', subject: 'Math', hint: 'One less than 50', explain: '7 × 7 = 49!' },
+            { q: 'What is 6 × 6?', a: '36', subject: 'Math', hint: 'Six squared', explain: '6 × 6 = 36!' },
+            { q: 'What is 90 ÷ 10?', a: '9', subject: 'Math', hint: 'Just remove the zero!', explain: '90 ÷ 10 = 9!' },
+            { q: 'What is 1000 ÷ 4?', a: '250', subject: 'Math', hint: 'Split 1000 into 4 equal groups', explain: '1000 ÷ 4 = 250!' },
         ]
     };
 
@@ -1398,8 +1351,11 @@
         var age = space.age;
         var deck;
         if (difficulty === 'easy') {
-            // Easy mode: always use elementary deck
-            deck = challengeQuestions.elementary;
+            if (age > 13) {
+                deck = challengeQuestions.elementary.concat(challengeQuestions.middle);
+            } else {
+                deck = challengeQuestions.elementary;
+            }
         } else {
             if (age <= 10) deck = challengeQuestions.elementary;
             else if (age <= 13) deck = challengeQuestions.middle;
@@ -1407,7 +1363,7 @@
         }
 
         // Determine deck name for used-questions tracking
-        var deckName = difficulty === 'easy' ? 'elementary' : (age <= 10 ? 'elementary' : (age <= 13 ? 'middle' : 'high'));
+        var deckName = difficulty === 'easy' ? (age > 13 ? 'easyhs' : 'elementary') : (age <= 10 ? 'elementary' : (age <= 13 ? 'middle' : 'high'));
 
         // Filter by tile subject if specified
         var filtered = deck;
