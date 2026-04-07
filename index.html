@@ -571,6 +571,161 @@
         } catch(e) {}
     }
 
+    function playCheerSound() {
+        if (!audioContext) return;
+        try {
+            if (audioContext.state === 'suspended') audioContext.resume();
+            var t = audioContext.currentTime;
+            // Crowd noise: filtered white noise burst
+            var bufSize = Math.floor(audioContext.sampleRate * 1.0);
+            var buf = audioContext.createBuffer(1, bufSize, audioContext.sampleRate);
+            var data = buf.getChannelData(0);
+            for (var i = 0; i < bufSize; i++) data[i] = (Math.random() * 2 - 1) * 0.35;
+            var noise = audioContext.createBufferSource();
+            noise.buffer = buf;
+            var noiseFilter = audioContext.createBiquadFilter();
+            noiseFilter.type = 'bandpass';
+            noiseFilter.frequency.setValueAtTime(1800, t);
+            noiseFilter.frequency.exponentialRampToValueAtTime(3200, t + 0.25);
+            noiseFilter.Q.value = 0.8;
+            var noiseGain = audioContext.createGain();
+            noiseGain.gain.setValueAtTime(0, t);
+            noiseGain.gain.linearRampToValueAtTime(0.35, t + 0.05);
+            noiseGain.gain.setValueAtTime(0.35, t + 0.4);
+            noiseGain.gain.exponentialRampToValueAtTime(0.001, t + 1.0);
+            noise.connect(noiseFilter);
+            noiseFilter.connect(noiseGain);
+            noiseGain.connect(audioContext.destination);
+            noise.start(t);
+            // Clapping rhythm: short noise pops
+            [0, 0.12, 0.24, 0.36, 0.56, 0.68].forEach(function(delay) {
+                var cb = audioContext.createBuffer(1, Math.floor(audioContext.sampleRate * 0.06), audioContext.sampleRate);
+                var cd = cb.getChannelData(0);
+                for (var j = 0; j < cd.length; j++) cd[j] = (Math.random() * 2 - 1) * 0.6;
+                var cs = audioContext.createBufferSource();
+                cs.buffer = cb;
+                var cg = audioContext.createGain();
+                cg.gain.setValueAtTime(0.18, t + delay);
+                cg.gain.exponentialRampToValueAtTime(0.001, t + delay + 0.06);
+                cs.connect(cg);
+                cg.connect(audioContext.destination);
+                cs.start(t + delay);
+            });
+            // Rising "yay" tones
+            [523, 659, 784, 1047].forEach(function(freq, idx) {
+                var osc = audioContext.createOscillator();
+                var g = audioContext.createGain();
+                osc.type = 'sine';
+                var st = t + idx * 0.07;
+                osc.frequency.setValueAtTime(freq * 0.85, st);
+                osc.frequency.exponentialRampToValueAtTime(freq, st + 0.12);
+                g.gain.setValueAtTime(0.13, st);
+                g.gain.exponentialRampToValueAtTime(0.001, st + 0.55);
+                osc.connect(g);
+                g.connect(audioContext.destination);
+                osc.start(st);
+                osc.stop(st + 0.55);
+            });
+        } catch(e) {}
+    }
+
+    function playBooSound() {
+        if (!audioContext) return;
+        try {
+            if (audioContext.state === 'suspended') audioContext.resume();
+            var t = audioContext.currentTime;
+            // Dark filtered crowd noise
+            var bufSize = Math.floor(audioContext.sampleRate * 0.9);
+            var buf = audioContext.createBuffer(1, bufSize, audioContext.sampleRate);
+            var data = buf.getChannelData(0);
+            for (var i = 0; i < bufSize; i++) data[i] = (Math.random() * 2 - 1) * 0.45;
+            var noise = audioContext.createBufferSource();
+            noise.buffer = buf;
+            var noiseFilter = audioContext.createBiquadFilter();
+            noiseFilter.type = 'lowpass';
+            noiseFilter.frequency.setValueAtTime(500, t);
+            noiseFilter.frequency.exponentialRampToValueAtTime(120, t + 0.7);
+            var noiseGain = audioContext.createGain();
+            noiseGain.gain.setValueAtTime(0.38, t);
+            noiseGain.gain.exponentialRampToValueAtTime(0.001, t + 0.85);
+            noise.connect(noiseFilter);
+            noiseFilter.connect(noiseGain);
+            noiseGain.connect(audioContext.destination);
+            noise.start(t);
+            // Grumbling descending tones
+            [240, 195, 160, 130].forEach(function(freq, idx) {
+                var osc = audioContext.createOscillator();
+                var g = audioContext.createGain();
+                osc.type = 'sawtooth';
+                var st = t + idx * 0.09;
+                osc.frequency.setValueAtTime(freq, st);
+                osc.frequency.exponentialRampToValueAtTime(freq * 0.65, st + 0.35);
+                g.gain.setValueAtTime(0.09, st);
+                g.gain.exponentialRampToValueAtTime(0.001, st + 0.4);
+                osc.connect(g);
+                g.connect(audioContext.destination);
+                osc.start(st);
+                osc.stop(st + 0.4);
+            });
+        } catch(e) {}
+    }
+
+    function launchGradCaps(colors, count) {
+        count = count || 18;
+        var cvs = document.getElementById('grad-caps-canvas');
+        if (cvs) cvs.remove();
+        cvs = document.createElement('canvas');
+        cvs.id = 'grad-caps-canvas';
+        cvs.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:2000;';
+        document.body.appendChild(cvs);
+        cvs.width = window.innerWidth;
+        cvs.height = window.innerHeight;
+        var ctx = cvs.getContext('2d');
+        var caps = [];
+        for (var i = 0; i < count; i++) {
+            caps.push({
+                x: Math.random() * cvs.width,
+                y: cvs.height + 30,
+                vx: (Math.random() - 0.5) * 5,
+                vy: -(Math.random() * 14 + 12),
+                rot: Math.random() * Math.PI * 2,
+                rotV: (Math.random() - 0.5) * 0.18,
+                size: Math.random() * 18 + 22,
+                delay: Math.floor(Math.random() * 25)
+            });
+        }
+        var frame = 0;
+        var gravity = 0.42;
+        function animate() {
+            frame++;
+            ctx.clearRect(0, 0, cvs.width, cvs.height);
+            var anyAlive = false;
+            for (var i = 0; i < caps.length; i++) {
+                var cap = caps[i];
+                if (frame < cap.delay) { anyAlive = true; continue; }
+                cap.vy += gravity;
+                cap.x += cap.vx;
+                cap.y += cap.vy;
+                cap.rot += cap.rotV;
+                if (cap.y < cvs.height + 60) anyAlive = true;
+                ctx.save();
+                ctx.translate(cap.x, cap.y);
+                ctx.rotate(cap.rot);
+                ctx.font = cap.size + 'px Arial';
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                ctx.fillText('🎓', 0, 0);
+                ctx.restore();
+            }
+            if (anyAlive && frame < 220) {
+                requestAnimationFrame(animate);
+            } else {
+                cvs.remove();
+            }
+        }
+        animate();
+    }
+
     // ========== GAME STATE ==========
     let players = [];
     let currentPlayer = 0;
@@ -1629,7 +1784,7 @@
                 '<p>Go back 1 space. -1 Commitment.</p>' +
                 answerReveal +
                 '<p style="font-size:11px;margin-top:8px;opacity:0.8;">Remember: failing now makes things harder later!</p></div>';
-            playSound('bad');
+            playBooSound();
             player.commitment = Math.max(0, player.commitment - 1);
             player.position = Math.max(0, player.position - 1);
             drawBoard();
@@ -1641,7 +1796,7 @@
                 '<p>You ACED it!</p>' +
                 '<p>Move forward 1 space! +$15 bonus! +2 Commitment!</p>' +
                 answerReveal + '</div>';
-            playSound('good');
+            playCheerSound();
             player.money += 15;
             player.commitment += 2;
             player.position = Math.min(boardSpaces.length - 1, player.position + 1);
@@ -1653,7 +1808,7 @@
                 '<p>Not bad! You passed.</p>' +
                 '<p>Stay here. +1 Commitment.</p>' +
                 answerReveal + '</div>';
-            playSound('good');
+            playCheerSound();
             player.commitment += 1;
         }
         updateUI();
@@ -1912,6 +2067,8 @@
                 var place = finishOrder.length;
                 var suffix = place === 1 ? 'st' : place === 2 ? 'nd' : place === 3 ? 'rd' : 'th';
                 showMessage('\u{1F393} ' + player.character.name + ' graduated ' + place + suffix + '!');
+                launchGradCaps([player.character.clothes], 15);
+                playCheerSound();
             }
 
             // Check if all players finished
@@ -1985,86 +2142,70 @@
             outcome.speedFactor = speedFactor;
             outcome.turnsUsed = p.turnsUsed;
 
-            if (tier === 'excellent' && goodRatio >= 0.6) {
-                // Great choices = great life
-                var r = Math.random();
-                if (r < 0.5) {
-                    outcome.career = 'Doctor / Engineer / Executive';
-                    outcome.salary = '$150,000 - $300,000/year';
-                    outcome.retirement = 'Retired at 55 with $3.2 million in savings';
-                    outcome.family = 'Married with 2 kids, owns a home';
-                    outcome.lifestyle = 'Travels the world, volunteers, grandkids visit every weekend';
-                    outcome.emoji = '\u{1F3E0}\u{1F4B0}\u2708\uFE0F\u{1F468}\u200D\u{1F469}\u200D\u{1F467}\u200D\u{1F466}';
-                } else {
-                    outcome.career = 'Business Owner / Tech Entrepreneur';
-                    outcome.salary = '$200,000 - $500,000/year';
-                    outcome.retirement = 'Retired at 50, sold company for millions';
-                    outcome.family = 'Married, financially secure family';
-                    outcome.lifestyle = 'Owns multiple properties, donates to charity';
-                    outcome.emoji = '\u{1F4BC}\u{1F4B5}\u{1F3E1}\u2764\uFE0F';
-                }
+            // === CAREER TIER ===
+            // careerScore weights: commitment matters most, then good choices, then challenges, then interest/balance
+            var careerScore = (p.commitment * 3) + (goodRatio * 16) + (challengeRatio * 11) + (p.interest * 1.5) + (p.balance * 0.5);
+
+            var greatCareers = [
+                { career: 'Neurosurgeon', salary: '$295,000 – $420,000/year', retirement: 'Retired at 55 with $5.4M in savings', family: 'Married with 2 kids, owns a beautiful home', lifestyle: 'Travels Europe yearly, mentors young doctors, grandkids love visiting.', emoji: '🧠🏥✈️' },
+                { career: 'Software Architect / Tech Lead', salary: '$185,000 – $260,000/year', retirement: 'Retired at 52 with $3.8M + stock options', family: 'Married, two college-educated kids', lifestyle: 'Builds passion projects, coaches youth coding camps, lives debt-free.', emoji: '💻🏆💰' },
+                { career: 'CEO / Company Founder', salary: '$250,000 – $800,000/year', retirement: 'Sold company at 50 — walked away with millions', family: 'Financially secure family, owns multiple properties', lifestyle: 'Donates to charities, advises startups, life is extraordinary.', emoji: '🏢💼🌟' },
+                { career: 'Attorney / Law Firm Partner', salary: '$200,000 – $340,000/year', retirement: 'Retired at 60 with $3.2M and a law legacy', family: 'Married, owns a lakehouse', lifestyle: 'Mentors law students, volunteers in community, plays golf weekly.', emoji: '⚖️🏡👨‍👩‍👧' },
+                { career: 'Aerospace Engineer', salary: '$160,000 – $220,000/year', retirement: 'Retired at 58 with $2.8M in savings', family: 'Devoted parent, owns a smart home', lifestyle: 'Worked on rockets, now gardens and writes memoirs. Kids brag about you.', emoji: '🚀🔭🏡' },
+                { career: 'Investment Banker / Financial Analyst', salary: '$220,000 – $500,000/year', retirement: 'Retired at 50 with $4.5M — money makes money', family: 'Established family, college funds set up for grandkids', lifestyle: 'Ski trips, yacht club, philanthropy. The rewards of discipline.', emoji: '📈💵🎿' },
+                { career: 'University Professor & Researcher', salary: '$115,000 – $175,000/year', retirement: 'Retired at 65 with $2.2M + emeritus status', family: 'Intellectually rich family life, deeply respected', lifestyle: 'Writing books, traveling to conferences, forever learning.', emoji: '📚🎓🌍' },
+                { career: 'Dentist / Orthodontist', salary: '$175,000 – $310,000/year', retirement: 'Retired at 57 with $3.5M, sold practice', family: 'Happy family, own a beautiful suburban home', lifestyle: 'Volunteers at dental clinics abroad. Comfortable and giving.', emoji: '🦷🏡❤️' },
+                { career: 'Commercial Airline Pilot', salary: '$180,000 – $280,000/year', retirement: 'Retired at 60 with $3.0M + airline pension', family: 'Tight-knit family, seen the whole world together', lifestyle: 'Free flights for life. Grandkids think you\'re the coolest person alive.', emoji: '✈️🌏👨‍✈️' },
+                { career: 'Architect / Urban Planner', salary: '$140,000 – $200,000/year', retirement: 'Retired at 62 with $2.4M, buildings carry your name', family: 'Creative household, supportive marriage', lifestyle: 'Your designs are landmarks now. Community honored you. Life well-lived.', emoji: '🏛️✏️🏆' }
+            ];
+
+            var goodCareers = [
+                { career: 'Registered Nurse', salary: '$68,000 – $88,000/year', retirement: 'Retired at 62 with $750K and a hospital pension', family: 'Close-knit family, modest home they own', lifestyle: 'Respected by your community. Comfortable and purposeful retirement.', emoji: '🏥💊😊' },
+                { career: 'High School Teacher', salary: '$54,000 – $72,000/year', retirement: 'Retired at 62 with $670K + pension', family: 'Happy family, kids went to college', lifestyle: 'Former students still message you. Left a real mark on the world.', emoji: '🏫📖🍎' },
+                { career: 'Police Officer / Detective', salary: '$62,000 – $85,000/year', retirement: 'Retired at 55 with full law enforcement pension', family: 'Strong family bond, safe neighborhood', lifestyle: 'Honored at retirement ceremony. Coach youth sports on weekends.', emoji: '🚔🏅👨‍👩‍👦' },
+                { career: 'Licensed Electrician', salary: '$65,000 – $90,000/year', retirement: 'Retired at 63 with $590K in savings', family: 'Own your home, kids are independent', lifestyle: 'Skilled trade pays well. Helped build your community literally.', emoji: '⚡🔧🏠' },
+                { career: 'IT Support / Systems Admin', salary: '$58,000 – $78,000/year', retirement: 'Retired at 65 with $520K in a 401K', family: 'Small apartment upgraded to a house over time', lifestyle: 'Steady, reliable career. Helped your family stay digitally ahead.', emoji: '🖥️🔐📊' },
+                { career: 'Accountant / Bookkeeper', salary: '$62,000 – $82,000/year', retirement: 'Retired at 65 with $900K — you knew money!', family: 'Family finances always in order, owned a nice home', lifestyle: 'Quiet, secure retirement. Kids never went without.', emoji: '📋💰🧮' },
+                { career: 'Real Estate Agent', salary: '$70,000 – $110,000/year', retirement: 'Retired at 65 with $1.1M and investment properties', family: 'Married, helped kids buy their first homes', lifestyle: 'Built wealth through property. Comfortable and self-sufficient.', emoji: '🏠🔑💵' },
+                { career: 'Marketing Manager', salary: '$72,000 – $95,000/year', retirement: 'Retired at 65 with $820K in savings', family: 'Dual-income household, family vacations abroad', lifestyle: 'Good career trajectory. Moved up through hard work and consistency.', emoji: '📣📈🌴' },
+                { career: 'Firefighter / Paramedic', salary: '$58,000 – $78,000/year', retirement: 'Retired at 52 with a full municipal pension', family: 'Deeply respected in your community, own your home', lifestyle: 'A true hero. Family is proud. Life has meaning and security.', emoji: '🚒🦺🏅' },
+                { career: 'Small Business Owner', salary: '$65,000 – $95,000/year', retirement: 'Retired at 67, sold shop for $280K. Comfortable.', family: 'Employed your kids, built something real', lifestyle: 'Your name is on the door. Regulars still ask about you. Legacy made.', emoji: '🏪🤝👨‍👩‍👧‍👦' }
+            ];
+
+            var badCareers = [
+                { career: 'Fast Food Worker', salary: '$22,000 – $28,000/year', retirement: 'Still working at 70. No savings to speak of.', family: 'Rarely home, relationships strained by stress', lifestyle: 'Feet hurt, bills mount. Every day you wonder what could have been.', emoji: '🍔😔💸' },
+                { career: 'Warehouse Packer', salary: '$25,000 – $31,000/year', retirement: 'Body gave out at 65 with less than $8K saved', family: 'Worked too much to be present. Regret lingers.', lifestyle: 'Physically exhausted. Wished you had studied when you had the chance.', emoji: '📦😩😔' },
+                { career: 'Gig Delivery Driver', salary: '$19,000 – $27,000/year', retirement: 'No retirement plan. Still delivering at 68.', family: 'Living alone, estranged from family', lifestyle: 'No benefits, no stability. The road never ends. Choices have costs.', emoji: '🛵😟📉' },
+                { career: 'Retail Cashier', salary: '$21,000 – $26,000/year', retirement: 'Working until 72. Social Security barely covers rent.', family: 'Small apartment, one parent household', lifestyle: 'Polite smile every day, but inside you carry heavy regret.', emoji: '🛒😐💳' },
+                { career: 'Telemarketer', salary: '$18,000 – $24,000/year', retirement: 'Job was eliminated at 55. Struggled for a decade.', family: 'Relationships fell apart from financial pressure', lifestyle: 'People hang up on you 200 times a day. Rock bottom of motivation.', emoji: '📞😫😞' },
+                { career: 'Temp Agency Worker', salary: '$19,000 – $25,000/year', retirement: 'No steady job means no steady savings. Grim outlook.', family: 'Never stable enough to start a family', lifestyle: 'New job every few months. Instability took its toll. No foundation built.', emoji: '📋🔄😕' },
+                { career: 'Unemployed / Odd Jobs', salary: '$10,000 – $16,000/year', retirement: 'Dependent on government assistance to survive', family: 'Isolated. Family offered help but you pushed them away.', lifestyle: 'Couch-surfing, borrowed money, borrowed time. This didn\'t have to happen.', emoji: '😞🏚️📉' },
+                { career: 'Custodian / Janitor', salary: '$24,000 – $29,000/year', retirement: 'Working until 68 with $14K saved total', family: 'Distant relationships, exhausted from overwork', lifestyle: 'Honest but hard work. More could have been built with more effort early on.', emoji: '🧹😔🌙' },
+                { career: 'Gig Freelancer (Unstable)', salary: '$15,000 – $22,000 (variable)', retirement: 'Nothing saved. Relying on relatives.', family: 'No stability hurt every relationship you had', lifestyle: 'Always hustling, never arriving. Freedom without foundation is chaos.', emoji: '💻🌀😩' },
+                { career: 'Government Assistance / Disability', salary: '$11,000 – $14,000/year', retirement: 'No retirement — this IS the retirement', family: 'Lost contact with most family', lifestyle: 'Rock bottom. Every poor choice compounded into this. It\'s never too late to learn from it.', emoji: '😢📉🏳️' }
+            ];
+
+            var pickedCareer;
+            if (careerScore >= 22) {
+                pickedCareer = greatCareers[Math.floor(Math.random() * greatCareers.length)];
+                outcome.careerTier = '🌟 GREAT';
                 outcome.color = 'good';
-            } else if (tier === 'good' && goodRatio >= 0.5) {
-                outcome.career = 'Teacher / Nurse / Skilled Professional';
-                outcome.salary = '$55,000 - $85,000/year';
-                outcome.retirement = 'Retired at 62 with $800K in savings and a pension';
-                outcome.family = 'Happy family, owns a modest home';
-                outcome.lifestyle = 'Comfortable retirement, enjoys hobbies, close friends';
-                outcome.emoji = '\u{1F3EB}\u{1F3E0}\u{1F60A}';
-                outcome.color = 'good';
-            } else if (tier === 'good') {
-                outcome.career = 'Office Worker / Sales Associate';
-                outcome.salary = '$40,000 - $55,000/year';
-                outcome.retirement = 'Retired at 65 with $400K in savings';
-                outcome.family = 'Small family, renting an apartment';
-                outcome.lifestyle = 'Gets by, wishes they saved more earlier';
-                outcome.emoji = '\u{1F3E2}\u{1F914}';
+            } else if (careerScore >= 11) {
+                pickedCareer = goodCareers[Math.floor(Math.random() * goodCareers.length)];
+                outcome.careerTier = '👍 GOOD';
                 outcome.color = 'neutral';
-            } else if (tier === 'average') {
-                var r2 = Math.random();
-                if (r2 < 0.5) {
-                    outcome.career = 'Retail / Food Service Manager';
-                    outcome.salary = '$28,000 - $38,000/year';
-                    outcome.retirement = 'Still working at 67, small savings';
-                    outcome.family = 'Living paycheck to paycheck';
-                    outcome.lifestyle = 'Wishes they had paid more attention in school';
-                    outcome.emoji = '\u{1F354}\u{1F614}';
-                } else {
-                    outcome.career = 'Warehouse / Delivery Worker';
-                    outcome.salary = '$25,000 - $35,000/year';
-                    outcome.retirement = 'Can\'t afford to retire until 70+';
-                    outcome.family = 'Struggling to make ends meet';
-                    outcome.lifestyle = 'Body is tired, regrets not studying harder';
-                    outcome.emoji = '\u{1F4E6}\u{1F62A}';
-                }
-                outcome.color = 'bad';
             } else {
-                // Struggling
-                var r3 = Math.random();
-                if (r3 < 0.4) {
-                    outcome.career = 'Minimum Wage / Odd Jobs';
-                    outcome.salary = '$15,000 - $22,000/year';
-                    outcome.retirement = 'No retirement savings. Working until you can\'t.';
-                    outcome.family = 'Alone, bouncing between apartments';
-                    outcome.lifestyle = 'Every day is a struggle. If only you had made better choices...';
-                    outcome.emoji = '\u{1F614}\u{1F4B8}';
-                } else if (r3 < 0.7) {
-                    outcome.career = 'Unemployed / Gig Worker';
-                    outcome.salary = '$10,000 - $18,000/year';
-                    outcome.retirement = 'Dependent on government assistance';
-                    outcome.family = 'No stable relationships';
-                    outcome.lifestyle = 'Couch surfing, no stable home. Choices have consequences.';
-                    outcome.emoji = '\u{1F61E}\u{1F3DA}';
-                } else {
-                    outcome.career = 'Between jobs';
-                    outcome.salary = 'Inconsistent income';
-                    outcome.retirement = 'Homeless shelter, no savings at all';
-                    outcome.family = 'Lost touch with family';
-                    outcome.lifestyle = 'Rock bottom. This is what happens when you give up on yourself.';
-                    outcome.emoji = '\u{1F494}\u{1F62D}';
-                }
+                pickedCareer = badCareers[Math.floor(Math.random() * badCareers.length)];
+                outcome.careerTier = '⚠️ BAD';
                 outcome.color = 'bad';
             }
+            outcome.career    = pickedCareer.career;
+            outcome.salary    = pickedCareer.salary;
+            outcome.retirement = pickedCareer.retirement;
+            outcome.family    = pickedCareer.family;
+            outcome.lifestyle = pickedCareer.lifestyle;
+            outcome.emoji     = pickedCareer.emoji;
+            outcome.careerScore = Math.round(careerScore);
 
             return outcome;
         });
@@ -2080,6 +2221,7 @@
             var placeEmoji = o.finishPlace === 1 ? '\u{1F947}' : o.finishPlace === 2 ? '\u{1F948}' : o.finishPlace === 3 ? '\u{1F949}' : '\u{1F3C5}';
             html += '<div class="card-display ' + o.color + '" style="margin-bottom:10px;text-align:left;">';
             html += '<h3>' + (i === 0 ? '\u{1F3C6} WINNER: ' : (i + 1) + '. ') + o.name + ' ' + o.emoji + '</h3>';
+            html += '<p style="font-size:12px;margin-bottom:6px;"><span style="background:rgba(0,0,0,0.2);padding:2px 8px;border-radius:12px;font-weight:700;">Career Tier: ' + o.careerTier + '</span> &nbsp;<span style="font-size:11px;opacity:0.8;">Score: ' + o.careerScore + ' pts</span></p>';
             html += '<p><b>Career:</b> ' + o.career + '</p>';
             html += '<p><b>Salary:</b> ' + o.salary + '</p>';
             html += '<p><b>At Retirement:</b> ' + o.retirement + '</p>';
@@ -2102,7 +2244,10 @@
         html += '</div>';
 
         document.getElementById('current-card').innerHTML = html;
-        playSound('good');
+        var allColors = players.map(function(p) { return p.character.clothes; });
+        launchGradCaps(allColors, 35);
+        playCheerSound();
+        setTimeout(playCheerSound, 600);
         stopMusic();
         showMessage('\u{1F393} Game Over! ' + results[0].name + ' wins with ' + results[0].score + ' pts! (' + results[0].multiplier + 'x multiplier)');
 
