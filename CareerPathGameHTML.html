@@ -1,0 +1,2158 @@
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CAREER PATHWAYS: The Board Game of Life Choices</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            font-family: 'Segoe UI', Tahoma, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: #333;
+            min-height: 100vh;
+        }
+        body.dark {
+            background: linear-gradient(135deg, #1a1a2e, #16213e);
+            color: #eee;
+        }
+        body.dark .panel { background: rgba(40,40,60,0.95); color: #eee; }
+        body.dark #board-container { background: #1a1a2e; }
+        #container {
+            max-width: 920px;
+            margin: 0 auto;
+            padding: 10px;
+        }
+        h1 {
+            text-align: center;
+            color: #fff;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+            margin-bottom: 8px;
+            font-size: 22px;
+        }
+        #age-display {
+            text-align: center;
+            font-size: 14px;
+            color: #fff;
+            font-weight: bold;
+            margin-bottom: 5px;
+            min-height: 20px;
+        }
+        #board-container {
+            background: #fff;
+            border-radius: 12px;
+            padding: 5px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+            margin-bottom: 10px;
+        }
+        #board { display: block; width: 100%; border-radius: 8px; }
+        #ui {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 10px;
+        }
+        .panel {
+            background: rgba(255,255,255,0.95);
+            border-radius: 10px;
+            padding: 12px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+        }
+        #sidebar { flex: 1; }
+        #sidebar h3 { margin-bottom: 8px; font-size: 14px; }
+        .player-stat {
+            padding: 6px 8px;
+            margin: 4px 0;
+            border-radius: 6px;
+            font-size: 12px;
+            font-weight: bold;
+        }
+        .player-stat.current {
+            border: 2px solid #FFD700;
+            box-shadow: 0 0 8px rgba(255,215,0,0.5);
+        }
+        #card-area { flex: 1.8; text-align: center; min-height: 180px; }
+        #spinner-area { flex: 1; text-align: center; }
+        #spinner { display: block; margin: 0 auto; }
+        #spin-button {
+            margin-top: 8px;
+            padding: 10px 24px;
+            background: linear-gradient(45deg, #4CAF50, #45a049);
+            color: white;
+            border: none;
+            cursor: pointer;
+            border-radius: 25px;
+            font-size: 16px;
+            font-weight: bold;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+            transition: transform 0.2s;
+        }
+        #spin-button:hover { transform: scale(1.05); }
+        #spin-button:disabled { background: #999; cursor: not-allowed; transform: none; }
+        #spin-result { margin-top: 5px; font-weight: bold; font-size: 13px; color: #333; min-height: 40px; }
+        body.dark #spin-result { color: #eee; }
+        #setup {
+            background: rgba(255,255,255,0.95);
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 15px;
+            text-align: center;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+        }
+        #setup select, #setup input, #setup button {
+            margin: 5px;
+            padding: 8px 12px;
+            border-radius: 6px;
+            border: 1px solid #ccc;
+            font-size: 14px;
+        }
+        #setup button { background: #4CAF50; color: white; border: none; cursor: pointer; }
+        /* Modal */
+        #modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            background: rgba(0,0,0,0.7);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+        }
+        #modal-overlay.active { display: flex; }
+        #modal {
+            background: #fff;
+            border-radius: 16px;
+            padding: 24px;
+            max-width: 450px;
+            width: 90%;
+            text-align: center;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.4);
+        }
+        #modal h2 { margin-bottom: 10px; font-size: 20px; }
+        #modal p { margin-bottom: 15px; font-size: 14px; color: #555; }
+        #modal-buttons { display: flex; flex-direction: column; gap: 8px; }
+        #modal-buttons button {
+            padding: 12px;
+            border: none;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: bold;
+            cursor: pointer;
+            color: white;
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            transition: transform 0.2s;
+        }
+        #modal-buttons button:hover { transform: scale(1.03); }
+        .card-display {
+            border-radius: 12px;
+            padding: 16px;
+            font-weight: bold;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+            animation: cardPop 0.3s ease;
+        }
+        @keyframes cardPop { from { transform: scale(0.8); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+        .card-display.good { background: linear-gradient(135deg, #4CAF50, #81C784); color: white; }
+        .card-display.bad { background: linear-gradient(135deg, #f44336, #e57373); color: white; }
+        .card-display.neutral { background: linear-gradient(135deg, #2196F3, #64B5F6); color: white; }
+        .card-display.gold { background: linear-gradient(135deg, #FFD700, #FFA500); color: #333; }
+        .card-display h3 { font-size: 16px; margin-bottom: 8px; }
+        .card-display p { font-size: 13px; margin-bottom: 5px; }
+        .toolbar {
+            display: flex;
+            gap: 8px;
+            justify-content: center;
+            margin-bottom: 10px;
+        }
+        .toolbar button {
+            padding: 6px 14px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 12px;
+            background: rgba(255,255,255,0.9);
+            box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+        }
+        #rules-box {
+            display: none;
+            background: rgba(255,255,255,0.95);
+            border-radius: 10px;
+            padding: 15px;
+            margin-top: 10px;
+            font-size: 13px;
+            line-height: 1.6;
+        }
+        body.dark #rules-box { background: rgba(40,40,60,0.95); color: #eee; }
+        @media (max-width: 950px) {
+            #ui { flex-direction: column; }
+        }
+        /* ===== TABLET / IPAD RESPONSIVE ===== */
+        @media (max-width: 1024px) {
+            #container { max-width: 100%; padding: 8px; }
+            h1 { font-size: 18px; }
+            #ui { flex-direction: column; }
+        }
+        @media (max-width: 768px) {
+            h1 { font-size: 16px; margin-bottom: 6px; }
+            #age-display { font-size: 13px; }
+            #board-container { padding: 3px; margin-bottom: 8px; overflow-x: auto; -webkit-overflow-scrolling: touch; }
+            #board { min-width: 900px; }
+            #ui { flex-direction: column; gap: 8px; }
+            .panel { padding: 10px; }
+            #card-area { min-height: 120px; }
+            #card-area h3, #sidebar h3, #spinner-area h3 { font-size: 13px; }
+            .player-stat { font-size: 11px; padding: 5px 6px; }
+            #spin-button {
+                padding: 14px 32px;
+                font-size: 18px;
+                min-height: 48px;
+                -webkit-tap-highlight-color: transparent;
+            }
+            .toolbar { flex-wrap: wrap; }
+            .toolbar button {
+                padding: 10px 16px;
+                font-size: 13px;
+                min-height: 44px;
+                -webkit-tap-highlight-color: transparent;
+            }
+            #setup select, #setup input, #setup button {
+                padding: 10px 14px;
+                font-size: 15px;
+                min-height: 44px;
+            }
+            #modal { max-width: 95%; padding: 18px; }
+            #modal h2 { font-size: 18px; }
+            #modal p { font-size: 13px; }
+            #modal-buttons button {
+                padding: 14px;
+                font-size: 15px;
+                min-height: 48px;
+                -webkit-tap-highlight-color: transparent;
+            }
+            #save-game, #load-game {
+                padding: 8px 12px !important;
+                font-size: 13px !important;
+                min-height: 44px;
+            }
+            #rules-box { font-size: 13px; padding: 12px; }
+            #spinner { width: 120px; height: 120px; }
+            .card-display { padding: 12px; }
+            .card-display h3 { font-size: 14px; }
+            .card-display p { font-size: 12px; }
+        }
+        /* Prevent double-tap zoom on buttons */
+        button, select, input { touch-action: manipulation; }
+    </style>
+</head>
+<body>
+    <div id="container">
+        <h1>&#127891; CAREER PATHWAYS: The Board Game of Life Choices</h1>
+        <div id="age-display"></div>
+
+        <div id="setup">
+            <h2>Welcome!</h2>
+            <p>Journey from Elementary School through Graduation! Every choice shapes your future.</p>
+            <label>Players: </label>
+            <select id="player-select">
+                <option>2</option><option>3</option><option>4</option><option>5</option><option>6</option>
+            </select>
+            <button id="start-setup">Next</button>
+            <div id="name-inputs" style="display:none;">
+                <div id="name-fields"></div>
+                <div style="margin:12px 0;">
+                    <label style="font-weight:bold;font-size:15px;">Difficulty: </label>
+                    <select id="difficulty-select" style="font-size:15px;padding:6px 10px;border-radius:6px;">
+                        <option value="easy">&#x1F31F; Easy (up to 6th grade questions)</option>
+                        <option value="hard" selected>&#x1F525; Hard (age-matched questions)</option>
+                    </select>
+                </div>
+                <button id="begin-game">Start Game!</button>
+            </div>
+        </div>
+
+        <div id="board-container">
+            <canvas id="board" width="900" height="520"></canvas>
+        </div>
+
+        <div id="ui">
+            <div id="sidebar" class="panel">
+                <h3>&#128202; Player Stats</h3>
+                <div id="stats"></div>
+                <div style="margin-top:8px;">
+                    <button id="save-game" style="padding:4px 8px;font-size:11px;">Save</button>
+                    <button id="load-game" style="padding:4px 8px;font-size:11px;">Load</button>
+                </div>
+            </div>
+            <div id="card-area" class="panel">
+                <h3>&#128203; Current Event</h3>
+                <div id="current-card"></div>
+            </div>
+            <div id="spinner-area" class="panel">
+                <h3>&#127919; Spinner</h3>
+                <canvas id="spinner" width="150" height="150"></canvas>
+                <button id="spin-button">SPIN!</button>
+                <div id="spin-result"></div>
+            </div>
+        </div>
+
+        <div class="toolbar">
+            <button id="toggle-mode">Dark Mode</button>
+            <button id="mute-btn">&#x1F50A; Music</button>
+            <button id="rules-btn">Rules</button>
+        </div>
+        <div id="rules-box">
+            <h3>How to Play</h3>
+            <p><b>2-6 players</b> journey from Elementary School through Graduation (Age 18).</p>
+            <p><b>Spin the wheel</b> to move forward along the path.</p>
+            <p><b>Challenge tiles (blue):</b> Answer the question yourself for a perfect score, or spin for a random grade! Below 6 = fail, 10 = ace it!</p>
+            <p><b>Chance tiles (yellow):</b> Draw a random card — could be good or bad!</p>
+            <p><b>Choice tiles (purple):</b> Pick your path. Bad past choices = fewer options!</p>
+            <p><b>Career tiles (orange):</b> Career guidance moments that shape your future.</p>
+            <p><b>At graduation:</b> Your life is projected to retirement age. Good choices = wealth &amp; happiness. Bad choices = struggle.</p>
+            <p><b>Every decision matters!</b> Make good choices early for the best outcomes later in life.</p>
+        </div>
+    </div>
+
+    <div id="modal-overlay">
+        <div id="modal">
+            <h2 id="modal-title"></h2>
+            <p id="modal-desc"></p>
+            <div id="modal-buttons"></div>
+        </div>
+    </div>
+
+    <script>
+    // ========== AUDIO ==========
+    let audioContext;
+    try { audioContext = new (window.AudioContext || window.webkitAudioContext)(); } catch(e) {}
+
+    // Background music state
+    let musicPlaying = false;
+    let musicGain = null; // master gain for instant mute
+    let musicInterval = null;
+    let musicMuted = false;
+
+    // Simple chiptune-style background melody using Web Audio API
+    function startMusic() {
+        if (!audioContext || musicPlaying) return;
+        if (audioContext.state === 'suspended') audioContext.resume();
+        musicPlaying = true;
+        musicMuted = false;
+
+        // Create master gain node for music — allows instant mute/unmute
+        musicGain = audioContext.createGain();
+        musicGain.gain.setValueAtTime(1.0, audioContext.currentTime);
+        musicGain.connect(audioContext.destination);
+
+        // Melody notes (frequency, duration in beats)
+        var melody = [
+            [392, 1], [440, 1], [494, 1], [523, 2], [494, 1], [440, 1], [392, 1],
+            [349, 1], [330, 1], [294, 1], [330, 2], [349, 1], [392, 1], [440, 1],
+            [494, 1], [523, 1], [587, 1], [523, 2], [494, 1], [440, 1], [392, 1],
+            [440, 2], [392, 1], [349, 2], [330, 1], [294, 2], [330, 1], [349, 2],
+            [392, 1], [440, 1], [494, 1], [523, 1], [587, 2], [523, 1], [494, 1],
+            [440, 1], [392, 2], [349, 1], [330, 2], [294, 1], [330, 1], [349, 2],
+        ];
+
+        // Bass line (plays in parallel, lower octave)
+        var bass = [
+            [196, 4], [175, 4], [165, 4], [147, 4],
+            [196, 4], [175, 4], [165, 4], [147, 4],
+            [196, 4], [220, 4], [175, 4], [165, 4],
+        ];
+
+        var tempo = 0.18;
+        var noteIdx = 0;
+        var bassIdx = 0;
+        var melodyTime = audioContext.currentTime + 0.1;
+        var bassTime = audioContext.currentTime + 0.1;
+
+        function scheduleChunk() {
+            if (!musicPlaying) return;
+            var now = audioContext.currentTime;
+            while (melodyTime < now + 3) {
+                var note = melody[noteIdx % melody.length];
+                var dur = note[1] * tempo;
+                try {
+                    var osc = audioContext.createOscillator();
+                    var g = audioContext.createGain();
+                    osc.type = 'triangle';
+                    osc.frequency.setValueAtTime(note[0], melodyTime);
+                    g.gain.setValueAtTime(0.04, melodyTime);
+                    g.gain.exponentialRampToValueAtTime(0.001, melodyTime + dur * 0.95);
+                    osc.connect(g);
+                    g.connect(musicGain);
+                    osc.start(melodyTime);
+                    osc.stop(melodyTime + dur);
+                } catch(e) {}
+                melodyTime += dur;
+                noteIdx++;
+            }
+            while (bassTime < now + 3) {
+                var bnote = bass[bassIdx % bass.length];
+                var bdur = bnote[1] * tempo;
+                try {
+                    var osc2 = audioContext.createOscillator();
+                    var g2 = audioContext.createGain();
+                    osc2.type = 'sine';
+                    osc2.frequency.setValueAtTime(bnote[0], bassTime);
+                    g2.gain.setValueAtTime(0.025, bassTime);
+                    g2.gain.exponentialRampToValueAtTime(0.001, bassTime + bdur * 0.9);
+                    osc2.connect(g2);
+                    g2.connect(musicGain);
+                    osc2.start(bassTime);
+                    osc2.stop(bassTime + bdur);
+                } catch(e) {}
+                bassTime += bdur;
+                bassIdx++;
+            }
+        }
+
+        scheduleChunk();
+        musicInterval = setInterval(scheduleChunk, 1000);
+    }
+
+    function stopMusic() {
+        musicPlaying = false;
+        if (musicInterval) { clearInterval(musicInterval); musicInterval = null; }
+        if (musicGain) { try { musicGain.gain.setValueAtTime(0, audioContext.currentTime); } catch(e) {} musicGain = null; }
+    }
+
+    function toggleMusicMute() {
+        if (!musicGain || !musicPlaying) return;
+        musicMuted = !musicMuted;
+        try { musicGain.gain.setValueAtTime(musicMuted ? 0 : 1, audioContext.currentTime); } catch(e) {}
+    }
+
+    function playButtonSound() {
+        if (!audioContext) return;
+        try {
+            if (audioContext.state === 'suspended') audioContext.resume();
+            var osc = audioContext.createOscillator();
+            var gain = audioContext.createGain();
+            osc.type = 'sine';
+            osc.frequency.setValueAtTime(600, audioContext.currentTime);
+            osc.frequency.exponentialRampToValueAtTime(800, audioContext.currentTime + 0.06);
+            gain.gain.setValueAtTime(0.06, audioContext.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.001, audioContext.currentTime + 0.1);
+            osc.connect(gain);
+            gain.connect(audioContext.destination);
+            osc.start(audioContext.currentTime);
+            osc.stop(audioContext.currentTime + 0.1);
+        } catch(e) {}
+    }
+
+    function playSound(type) {
+        if (!audioContext) return;
+        try {
+            if (audioContext.state === 'suspended') audioContext.resume();
+            const osc = audioContext.createOscillator();
+            const gain = audioContext.createGain();
+            osc.connect(gain);
+            gain.connect(audioContext.destination);
+            gain.gain.setValueAtTime(0.08, audioContext.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.001, audioContext.currentTime + 0.4);
+            switch(type) {
+                case 'spin': osc.frequency.setValueAtTime(440, audioContext.currentTime); osc.frequency.exponentialRampToValueAtTime(880, audioContext.currentTime + 0.3); break;
+                case 'good': osc.frequency.setValueAtTime(523, audioContext.currentTime); osc.frequency.exponentialRampToValueAtTime(784, audioContext.currentTime + 0.2); break;
+                case 'bad': osc.frequency.setValueAtTime(300, audioContext.currentTime); osc.frequency.exponentialRampToValueAtTime(150, audioContext.currentTime + 0.3); break;
+                case 'step': osc.frequency.setValueAtTime(200, audioContext.currentTime); gain.gain.setValueAtTime(0.03, audioContext.currentTime); break;
+                case 'card': osc.frequency.setValueAtTime(660, audioContext.currentTime); break;
+                case 'choice': osc.frequency.setValueAtTime(550, audioContext.currentTime); break;
+            }
+            osc.start(audioContext.currentTime);
+            osc.stop(audioContext.currentTime + 0.4);
+        } catch(e) {}
+    }
+
+    // ========== GAME STATE ==========
+    let players = [];
+    let currentPlayer = 0;
+    let boardSpaces = [];
+    let darkMode = false;
+    let isMoving = false;
+    let moveTarget = 0;
+    let gameStarted = false;
+    let waitingForAction = false; // waiting for challenge answer or spin
+    let finishOrder = []; // track graduation order
+    let totalTurns = 0; // global turn counter
+    let difficulty = 'hard'; // 'easy' or 'hard'
+    let usedQuestions = { elementary: [], middle: [], high: [] };
+
+    const characters = [
+        { name: 'Alex', color: '#FFDBAC', hair: '#8B4513', clothes: '#4A90D9' },
+        { name: 'Jordan', color: '#F5DEB3', hair: '#1a1a1a', clothes: '#D94A4A' },
+        { name: 'Taylor', color: '#FFE4B5', hair: '#DAA520', clothes: '#4AD94A' },
+        { name: 'Morgan', color: '#DEB887', hair: '#654321', clothes: '#D9D94A' },
+        { name: 'Casey', color: '#D2B48C', hair: '#FF69B4', clothes: '#9B4AD9' },
+        { name: 'Riley', color: '#BC8F8F', hair: '#2E8B57', clothes: '#D9924A' }
+    ];
+
+    // ========== INTERACTIVE CHALLENGE QUESTIONS ==========
+    // Each has: question, answer (string, case-insensitive), age range, subject
+    function speakWord(word) {
+        if ('speechSynthesis' in window) {
+            window.speechSynthesis.cancel();
+            var utter = new SpeechSynthesisUtterance(word);
+            utter.rate = 0.85;
+            utter.pitch = 1;
+            utter.volume = 1;
+            window.speechSynthesis.speak(utter);
+        }
+    }
+
+    const challengeQuestions = {
+        elementary: [
+            // ===== SPELLING (50 words) =====
+            { q: 'Listen and spell the word!', a: 'friend', subject: 'Spelling', spoken: 'friend', hint: 'It ends with "-iend"', explain: 'Friend has "i before e" — remember: "I am your frIEnd to the END!"' },
+            { q: 'Listen and spell the word!', a: 'school', subject: 'Spelling', spoken: 'school', hint: 'It starts with "sch"', explain: 'School starts with "sch" — like "schedule." The "ch" makes a "k" sound!' },
+            { q: 'Listen and spell the word!', a: 'because', subject: 'Spelling', spoken: 'because', hint: 'Big Elephants Can Always Understand Small Elephants', explain: 'Use the trick: Big Elephants Can Always Understand Small Elephants — B-E-C-A-U-S-E!' },
+            { q: 'Listen and spell the word!', a: 'beautiful', subject: 'Spelling', spoken: 'beautiful', hint: 'It starts with "beau"', explain: 'Beautiful starts with "beau" (French for handsome). Beau-ti-ful!' },
+            { q: 'Listen and spell the word!', a: 'people', subject: 'Spelling', spoken: 'people', hint: 'It has "eo" in the middle', explain: 'People is tricky — P-E-O-P-L-E. The "eo" sounds like "ee" but it\'s not!' },
+            { q: 'Listen and spell the word!', a: 'wednesday', subject: 'Spelling', spoken: 'wednesday', hint: 'Think: "Wed-nes-day"', explain: 'Say it as "Wed-NES-day" to remember the silent D!' },
+            { q: 'Listen and spell the word!', a: 'together', subject: 'Spelling', spoken: 'together', hint: 'to + get + her', explain: 'Break it into 3 words: to-get-her!' },
+            { q: 'Listen and spell the word!', a: 'different', subject: 'Spelling', spoken: 'different', hint: 'Two f\'s and ends in "-ent"', explain: 'Different has a double-F and ends with "-ent." Diff-er-ent!' },
+            { q: 'Listen and spell the word!', a: 'caught', subject: 'Spelling', spoken: 'caught', hint: 'It has "augh" in the middle', explain: 'Caught has sneaky silent letters — "augh" makes an "aw" sound. C-A-U-G-H-T!' },
+            { q: 'Listen and spell the word!', a: 'through', subject: 'Spelling', spoken: 'through', hint: 'Starts with "thr," ends with "ough"', explain: 'Through ends with "-ough" which makes an "oo" sound!' },
+            { q: 'Listen and spell the word!', a: 'enough', subject: 'Spelling', spoken: 'enough', hint: 'Ends with "-ough" making an "uff" sound', explain: 'Enough = E-N-O-U-G-H. The "-ough" here sounds like "uff!"' },
+            { q: 'Listen and spell the word!', a: 'favorite', subject: 'Spelling', spoken: 'favorite', hint: 'Fav + or + ite', explain: 'Break it up: fav-or-ite!' },
+            { q: 'Listen and spell the word!', a: 'library', subject: 'Spelling', spoken: 'library', hint: 'Two r\'s: lib-rar-y', explain: 'Library has TWO r\'s — li-BRAR-y. Don\'t forget that first R!' },
+            { q: 'Listen and spell the word!', a: 'trouble', subject: 'Spelling', spoken: 'trouble', hint: 'Ends with "-ble"', explain: 'Trouble = T-R-O-U-B-L-E. Ends with "-ble" like "double!"' },
+            { q: 'Listen and spell the word!', a: 'believe', subject: 'Spelling', spoken: 'believe', hint: 'Don\'t believe a LIE', explain: 'There\'s a LIE in beLIEve! B-E-L-I-E-V-E.' },
+            { q: 'Listen and spell the word!', a: 'answer', subject: 'Spelling', spoken: 'answer', hint: 'The "w" is silent!', explain: 'Answer has a silent W! A-N-S-W-E-R — you don\'t hear the W at all.' },
+            { q: 'Listen and spell the word!', a: 'island', subject: 'Spelling', spoken: 'island', hint: 'The "s" is silent!', explain: 'Island has a silent S! I-S-L-A-N-D. Sneaky, right?' },
+            { q: 'Listen and spell the word!', a: 'thought', subject: 'Spelling', spoken: 'thought', hint: 'It has "ough" in the middle', explain: 'Thought = T-H-O-U-G-H-T. That "ough" makes an "aw" sound here!' },
+            { q: 'Listen and spell the word!', a: 'special', subject: 'Spelling', spoken: 'special', hint: 'Ends with "-cial"', explain: 'Special ends with "-cial" not "-shul." S-P-E-C-I-A-L!' },
+            { q: 'Listen and spell the word!', a: 'science', subject: 'Spelling', spoken: 'science', hint: 'Starts with "sci-"', explain: 'Science starts with "sci" which makes an "s" sound. S-C-I-E-N-C-E!' },
+            { q: 'Listen and spell the word!', a: 'surprise', subject: 'Spelling', spoken: 'surprise', hint: 'It has two r\'s', explain: 'Surprise has two R\'s! S-U-R-P-R-I-S-E. Don\'t forget the first R!' },
+            { q: 'Listen and spell the word!', a: 'language', subject: 'Spelling', spoken: 'language', hint: 'Ends with "-guage"', explain: 'Language = L-A-N-G-U-A-G-E. That "-guage" ending is tricky!' },
+            { q: 'Listen and spell the word!', a: 'calendar', subject: 'Spelling', spoken: 'calendar', hint: 'It ends with "-ar" not "-er"', explain: 'Calendar ends with "-ar": C-A-L-E-N-D-A-R. Not "calender!"' },
+            { q: 'Listen and spell the word!', a: 'exercise', subject: 'Spelling', spoken: 'exercise', hint: 'It starts with "exer-"', explain: 'Exercise = E-X-E-R-C-I-S-E. Remember the "er" before the "c!"' },
+            { q: 'Listen and spell the word!', a: 'February', subject: 'Spelling', spoken: 'february', hint: 'It has two r\'s that people forget', explain: 'February has a sneaky first R: F-E-B-R-U-A-R-Y. Most people skip it!' },
+            { q: 'Listen and spell the word!', a: 'weight', subject: 'Spelling', spoken: 'weight', hint: '"ei" not "ie" — and silent "gh"', explain: 'Weight = W-E-I-G-H-T. The "gh" is silent and "ei" makes an "ay" sound!' },
+            { q: 'Listen and spell the word!', a: 'piece', subject: 'Spelling', spoken: 'piece', hint: 'A PIEce of PIE', explain: 'Piece has PIE in it! P-I-E-C-E. Think: a piece of pie!' },
+            { q: 'Listen and spell the word!', a: 'minute', subject: 'Spelling', spoken: 'minute', hint: 'Ends with "-ute"', explain: 'Minute = M-I-N-U-T-E. Sounds like "minit" but spelled differently!' },
+            { q: 'Listen and spell the word!', a: 'certain', subject: 'Spelling', spoken: 'certain', hint: 'Starts with "cer-"', explain: 'Certain = C-E-R-T-A-I-N. The "c" makes an "s" sound here!' },
+            { q: 'Listen and spell the word!', a: 'daughter', subject: 'Spelling', spoken: 'daughter', hint: 'It has "augh" like "caught"', explain: 'Daughter = D-A-U-G-H-T-E-R. Same "augh" pattern as "caught!"' },
+            { q: 'Listen and spell the word!', a: 'stomach', subject: 'Spelling', spoken: 'stomach', hint: 'Ends with "-ach" not "-ack"', explain: 'Stomach = S-T-O-M-A-C-H. The "ch" makes a "k" sound!' },
+            { q: 'Listen and spell the word!', a: 'kitchen', subject: 'Spelling', spoken: 'kitchen', hint: 'Starts with "kit-"', explain: 'Kitchen = K-I-T-C-H-E-N. A kit for your chen... well, just memorize it!' },
+            { q: 'Listen and spell the word!', a: 'straight', subject: 'Spelling', spoken: 'straight', hint: 'It has 8 letters and "aigh" in the middle', explain: 'Straight = S-T-R-A-I-G-H-T. That "aight" is the trickiest part!' },
+            { q: 'Listen and spell the word!', a: 'weather', subject: 'Spelling', spoken: 'weather', hint: 'Don\'t confuse it with "whether"!', explain: 'Weather (rain/sun) = W-E-A-T-H-E-R. "Whether" means "if!"' },
+            { q: 'Listen and spell the word!', a: 'half', subject: 'Spelling', spoken: 'half', hint: 'The "l" is silent!', explain: 'Half = H-A-L-F. You don\'t say the L but it\'s there!' },
+            { q: 'Listen and spell the word!', a: 'every', subject: 'Spelling', spoken: 'every', hint: 'Starts with "ev-"', explain: 'Every = E-V-E-R-Y. Some people say "evry" but there\'s an E in the middle!' },
+            { q: 'Listen and spell the word!', a: 'famous', subject: 'Spelling', spoken: 'famous', hint: 'Ends with "-ous"', explain: 'Famous = F-A-M-O-U-S. Ends with "-ous" like "dangerous!"' },
+            { q: 'Listen and spell the word!', a: 'ocean', subject: 'Spelling', spoken: 'ocean', hint: 'Only 5 letters!', explain: 'Ocean = O-C-E-A-N. Short word but the "ce" makes a "sh" sound!' },
+            { q: 'Listen and spell the word!', a: 'machine', subject: 'Spelling', spoken: 'machine', hint: 'The "ch" sounds like "sh"', explain: 'Machine = M-A-C-H-I-N-E. The "ch" makes a "sh" sound — it\'s from French!' },
+            { q: 'Listen and spell the word!', a: 'color', subject: 'Spelling', spoken: 'color', hint: 'Just 5 letters, no "u"', explain: 'Color = C-O-L-O-R. In American English, no "u" needed!' },
+            { q: 'Listen and spell the word!', a: 'knowledge', subject: 'Spelling', spoken: 'knowledge', hint: 'The "k" is silent!', explain: 'Knowledge = K-N-O-W-L-E-D-G-E. Both the K and the W are in there!' },
+            { q: 'Listen and spell the word!', a: 'sentence', subject: 'Spelling', spoken: 'sentence', hint: 'Ends with "-ence"', explain: 'Sentence = S-E-N-T-E-N-C-E. Ends with "-ence" not "-ense!"' },
+            { q: 'Listen and spell the word!', a: 'cousin', subject: 'Spelling', spoken: 'cousin', hint: 'Rhymes with "dozen"', explain: 'Cousin = C-O-U-S-I-N. The "ou" makes an "uh" sound!' },
+            { q: 'Listen and spell the word!', a: 'muscle', subject: 'Spelling', spoken: 'muscle', hint: 'The "c" is silent!', explain: 'Muscle = M-U-S-C-L-E. The C is silent — like a hidden muscle!' },
+            { q: 'Listen and spell the word!', a: 'captain', subject: 'Spelling', spoken: 'captain', hint: 'Starts with "cap-"', explain: 'Captain = C-A-P-T-A-I-N. The leader of the ship!' },
+            { q: 'Listen and spell the word!', a: 'sandwich', subject: 'Spelling', spoken: 'sandwich', hint: 'Named after a real person!', explain: 'Sandwich = S-A-N-D-W-I-C-H. Named after the Earl of Sandwich!' },
+            { q: 'Listen and spell the word!', a: 'bicycle', subject: 'Spelling', spoken: 'bicycle', hint: '"bi" means two (two wheels!)', explain: 'Bicycle = B-I-C-Y-C-L-E. "Bi" means two — two wheels!' },
+            { q: 'Listen and spell the word!', a: 'vegetable', subject: 'Spelling', spoken: 'vegetable', hint: 'Has 9 letters, starts with "veg"', explain: 'Vegetable = V-E-G-E-T-A-B-L-E. Don\'t skip the middle letters!' },
+            { q: 'Listen and spell the word!', a: 'chocolate', subject: 'Spelling', spoken: 'chocolate', hint: 'Starts with "choc-"', explain: 'Chocolate = C-H-O-C-O-L-A-T-E. Yummy AND hard to spell!' },
+            { q: 'Listen and spell the word!', a: 'important', subject: 'Spelling', spoken: 'important', hint: 'Ends with "-ant"', explain: 'Important = I-M-P-O-R-T-A-N-T. Ends with "-ant" not "-ent!"' },
+            // ===== MATH (60 questions) =====
+            { q: 'What is 7 x 8?', a: '56', subject: 'Math', hint: '5, 6, 7, 8 — the numbers go in order!', explain: '7 × 8 = 56. Cool trick: 5-6-7-8!' },
+            { q: 'What is 9 x 6?', a: '54', subject: 'Math', hint: '9 x 6 is the same as 6 x 9', explain: '9 × 6 = 54. Nines trick: fold your 6th finger — 5 left, 4 right = 54!' },
+            { q: 'What is 12 x 5?', a: '60', subject: 'Math', hint: 'Multiply by 10 and cut in half', explain: '12 × 5 = 60. Quick way: 12 × 10 = 120, half = 60!' },
+            { q: 'What is 48 + 37?', a: '85', subject: 'Math', hint: 'Add 48 + 30 first, then add 7', explain: '48 + 37 = 85. Break it: 48 + 30 = 78, then 78 + 7 = 85!' },
+            { q: 'What is 100 - 46?', a: '54', subject: 'Math', hint: 'What plus 46 equals 100?', explain: '100 - 46 = 54. Think: 46 + 54 = 100!' },
+            { q: 'What is 8 x 9?', a: '72', subject: 'Math', hint: 'Use the nines finger trick!', explain: '8 × 9 = 72. Fold your 8th finger: 7 left, 2 right = 72!' },
+            { q: 'What is 6 x 7?', a: '42', subject: 'Math', hint: 'Ends in 2', explain: '6 × 7 = 42. The answer to life, the universe, and everything!' },
+            { q: 'What is 11 x 11?', a: '121', subject: 'Math', hint: '11 squared — digits go 1, 2, 1', explain: '11 × 11 = 121. Pattern: 1-2-1!' },
+            { q: 'What is 144 divided by 12?', a: '12', subject: 'Math', hint: 'What number times itself gives 144?', explain: '144 ÷ 12 = 12. A perfect square!' },
+            { q: 'What is 25 + 68?', a: '93', subject: 'Math', hint: 'Add 25 + 70, then subtract 2', explain: '25 + 68 = 93. Try: 25 + 70 = 95, minus 2 = 93!' },
+            { q: 'What is 200 - 85?', a: '115', subject: 'Math', hint: 'Count up from 85 to 200', explain: '200 - 85 = 115. Count: 85 + 15 = 100, + 100 = 200!' },
+            { q: 'What is 3 x 15?', a: '45', subject: 'Math', hint: '15 + 15 + 15', explain: '3 × 15 = 45. Add 15 three times!' },
+            { q: 'What is 99 + 1?', a: '100', subject: 'Math', hint: 'Right after 99!', explain: '99 + 1 = 100!' },
+            { q: 'What is half of 64?', a: '32', subject: 'Math', hint: 'Split 64 into two equal groups', explain: 'Half of 64 = 32. Two groups of 32 make 64!' },
+            { q: 'What is 9 x 9?', a: '81', subject: 'Math', hint: 'A number in the 80s', explain: '9 × 9 = 81. Nine squared!' },
+            { q: 'What is 150 + 75?', a: '225', subject: 'Math', hint: '150 + 50 = 200, then add 25 more', explain: '150 + 75 = 225!' },
+            { q: 'What is 5 x 12?', a: '60', subject: 'Math', hint: 'How many minutes in an hour?', explain: '5 × 12 = 60. Same as minutes in one hour!' },
+            { q: 'What is 1000 - 350?', a: '650', subject: 'Math', hint: 'Start from 1000 and subtract', explain: '1000 - 350 = 650. Think: 1000 - 300 = 700, then - 50 = 650!' },
+            { q: 'What is 4 x 25?', a: '100', subject: 'Math', hint: 'Four quarters make a dollar!', explain: '4 × 25 = 100. Like four quarters!' },
+            { q: 'What is 72 divided by 8?', a: '9', subject: 'Math', hint: '8 times what equals 72?', explain: '72 ÷ 8 = 9. Because 8 × 9 = 72!' },
+            { q: 'What is 56 divided by 7?', a: '8', subject: 'Math', hint: '7 times what equals 56?', explain: '56 ÷ 7 = 8!' },
+            { q: 'What is 13 + 29?', a: '42', subject: 'Math', hint: 'Add 13 + 30, then subtract 1', explain: '13 + 29 = 42!' },
+            { q: 'What is 8 x 8?', a: '64', subject: 'Math', hint: 'Same as a chess board!', explain: '8 × 8 = 64. A chess board has 64 squares!' },
+            { q: 'What is 12 x 12?', a: '144', subject: 'Math', hint: 'The last one on the times table!', explain: '12 × 12 = 144. The biggest product on a 12×12 times table!' },
+            { q: 'What is 500 - 125?', a: '375', subject: 'Math', hint: '500 - 100 = 400, then subtract 25 more', explain: '500 - 125 = 375!' },
+            { q: 'What is 7 x 7?', a: '49', subject: 'Math', hint: 'One less than 50', explain: '7 × 7 = 49!' },
+            { q: 'What is 9 x 7?', a: '63', subject: 'Math', hint: 'Nines trick: fold finger 7', explain: '9 × 7 = 63. Fold 7th finger: 6 left, 3 right!' },
+            { q: 'What is 45 + 55?', a: '100', subject: 'Math', hint: 'They add up to a nice round number', explain: '45 + 55 = 100!' },
+            { q: 'What is 6 x 8?', a: '48', subject: 'Math', hint: 'Close to 50', explain: '6 × 8 = 48!' },
+            { q: 'What is 300 - 178?', a: '122', subject: 'Math', hint: 'Count up from 178', explain: '300 - 178 = 122. 178 + 22 = 200, + 100 = 300!' },
+            { q: 'What is 4 x 9?', a: '36', subject: 'Math', hint: 'Same as 6 x 6!', explain: '4 × 9 = 36. Fun fact: 6 × 6 is also 36!' },
+            { q: 'What is half of 250?', a: '125', subject: 'Math', hint: 'Split 250 into two groups', explain: 'Half of 250 = 125!' },
+            { q: 'What is 11 x 7?', a: '77', subject: 'Math', hint: 'Double digit!', explain: '11 × 7 = 77. Eleven times any single digit — double it: 77!' },
+            { q: 'What is 63 divided by 9?', a: '7', subject: 'Math', hint: '9 times what equals 63?', explain: '63 ÷ 9 = 7!' },
+            { q: 'What is 15 x 4?', a: '60', subject: 'Math', hint: '15 + 15 + 15 + 15', explain: '15 × 4 = 60!' },
+            { q: 'What is 81 divided by 9?', a: '9', subject: 'Math', hint: 'The square root of 81', explain: '81 ÷ 9 = 9!' },
+            { q: 'What is 160 + 40?', a: '200', subject: 'Math', hint: 'Almost 200!', explain: '160 + 40 = 200!' },
+            { q: 'What is 3 x 8?', a: '24', subject: 'Math', hint: 'Hours in one day!', explain: '3 × 8 = 24. Same as hours in a day!' },
+            { q: 'What is double 35?', a: '70', subject: 'Math', hint: '35 + 35', explain: 'Double 35 = 70. Just add it to itself!' },
+            { q: 'What is 10 x 10?', a: '100', subject: 'Math', hint: 'Just add a zero!', explain: '10 × 10 = 100!' },
+            { q: 'What is 132 - 48?', a: '84', subject: 'Math', hint: '132 - 50 + 2', explain: '132 - 48 = 84!' },
+            { q: 'What is 5 x 5 x 4?', a: '100', subject: 'Math', hint: '5 x 5 = 25, then x 4', explain: '5 × 5 = 25, × 4 = 100!' },
+            { q: 'What is 90 divided by 10?', a: '9', subject: 'Math', hint: 'Just remove the zero!', explain: '90 ÷ 10 = 9!' },
+            { q: 'What is 17 + 8?', a: '25', subject: 'Math', hint: '17 + 3 = 20, then add 5', explain: '17 + 8 = 25!' },
+            { q: 'What is 6 x 6?', a: '36', subject: 'Math', hint: 'Six squared', explain: '6 × 6 = 36!' },
+            { q: 'What is 1000 divided by 4?', a: '250', subject: 'Math', hint: 'Split 1000 into 4 groups', explain: '1000 ÷ 4 = 250!' },
+            { q: 'What is 75 + 48?', a: '123', subject: 'Math', hint: '75 + 50 - 2', explain: '75 + 48 = 123. Try 75 + 50 = 125, minus 2 = 123!' },
+            { q: 'What is 9 x 12?', a: '108', subject: 'Math', hint: '9 x 10 = 90, + 9 x 2 = 18', explain: '9 × 12 = 108!' },
+            { q: 'What is 100 divided by 5?', a: '20', subject: 'Math', hint: 'Five groups from 100', explain: '100 ÷ 5 = 20!' },
+            { q: 'What is 55 - 19?', a: '36', subject: 'Math', hint: '55 - 20 + 1', explain: '55 - 19 = 36. Subtract 20 and add 1 back!' },
+            // ===== GEOGRAPHY (30 questions) =====
+            { q: 'How many continents are there?', a: '7', subject: 'Geography', hint: 'Think of the big land masses', explain: 'There are 7 continents: Africa, Antarctica, Asia, Australia, Europe, North America, South America!' },
+            { q: 'What is the largest ocean?', a: 'pacific', subject: 'Geography', hint: 'Its name means "peaceful"', explain: 'The Pacific Ocean covers more area than all land on Earth combined!' },
+            { q: 'How many states are in the USA?', a: '50', subject: 'Geography', hint: 'Count the stars on the flag!', explain: '50 states — each star on the flag represents one!' },
+            { q: 'What continent is Egypt on?', a: 'africa', subject: 'Geography', hint: 'The pyramids are on this continent', explain: 'Egypt is in Africa, in the northeast corner!' },
+            { q: 'What is the longest river in the world?', a: 'nile', subject: 'Geography', hint: 'It flows through Egypt', explain: 'The Nile River is about 4,132 miles long!' },
+            { q: 'What country is shaped like a boot?', a: 'italy', subject: 'Geography', hint: 'Famous for pizza and pasta', explain: 'Italy looks like a boot kicking a ball (Sicily)!' },
+            { q: 'What ocean is between the USA and England?', a: 'atlantic', subject: 'Geography', hint: 'Starts with "A"', explain: 'The Atlantic Ocean separates North America from Europe!' },
+            { q: 'What is the smallest continent?', a: 'australia', subject: 'Geography', hint: 'It\'s also a country!', explain: 'Australia is the smallest continent and it\'s also its own country!' },
+            { q: 'What is the largest country in the world by area?', a: 'russia', subject: 'Geography', hint: 'It spans two continents', explain: 'Russia is so huge it stretches across Europe AND Asia!' },
+            { q: 'What continent is the South Pole on?', a: 'antarctica', subject: 'Geography', hint: 'The coldest, iciest place on Earth', explain: 'Antarctica is at the very bottom of the globe — covered in ice!' },
+            { q: 'What is the capital of the United States?', a: 'washington', subject: 'Geography', hint: 'Named after the first president', explain: 'Washington D.C. is the capital — named after George Washington!' },
+            { q: 'What is the tallest mountain in the world?', a: 'everest', subject: 'Geography', hint: 'It\'s in Asia, on the border of Nepal and Tibet', explain: 'Mount Everest is 29,032 feet tall — the highest point on Earth!' },
+            { q: 'What language do they speak in Brazil?', a: 'portuguese', subject: 'Geography', hint: 'NOT Spanish!', explain: 'Brazil speaks Portuguese! It was colonized by Portugal, not Spain.' },
+            { q: 'What is the largest desert in the world?', a: 'sahara', subject: 'Geography', hint: 'It\'s in Africa', explain: 'The Sahara Desert in Africa — almost as big as the entire United States!' },
+            { q: 'How many oceans are there?', a: '5', subject: 'Geography', hint: 'Pacific, Atlantic, Indian, Arctic, and...', explain: 'Five oceans: Pacific, Atlantic, Indian, Arctic, and Southern!' },
+            { q: 'What continent is Brazil in?', a: 'south america', subject: 'Geography', hint: 'Below North America', explain: 'Brazil is in South America — it\'s the biggest country there!' },
+            { q: 'What is the Great Wall located in?', a: 'china', subject: 'Geography', hint: 'An Asian country with over a billion people', explain: 'The Great Wall of China is over 13,000 miles long!' },
+            { q: 'What ocean is on the west coast of the USA?', a: 'pacific', subject: 'Geography', hint: 'California faces this ocean', explain: 'The Pacific Ocean is on the west coast — surfers love it!' },
+            { q: 'What is the largest state in the USA?', a: 'alaska', subject: 'Geography', hint: 'It\'s not connected to the other 48 states', explain: 'Alaska is the biggest state — over twice the size of Texas!' },
+            { q: 'What continent has the most countries?', a: 'africa', subject: 'Geography', hint: 'It has 54 countries!', explain: 'Africa has 54 countries — more than any other continent!' },
+            { q: 'What city is the Statue of Liberty in?', a: 'new york', subject: 'Geography', hint: 'The Big Apple!', explain: 'The Statue of Liberty is in New York Harbor — a gift from France!' },
+            { q: 'What is the driest continent on Earth?', a: 'antarctica', subject: 'Geography', hint: 'It\'s also the coldest!', explain: 'Antarctica is technically a desert — hardly any rain or snow falls there!' },
+            { q: 'What country has the most people?', a: 'india', subject: 'Geography', hint: 'It passed China recently!', explain: 'India has over 1.4 billion people — the most of any country!' },
+            { q: 'The Amazon River is on what continent?', a: 'south america', subject: 'Geography', hint: 'Same continent as Brazil', explain: 'The Amazon River flows through South America — mostly through Brazil!' },
+            { q: 'What is the capital of England?', a: 'london', subject: 'Geography', hint: 'Big Ben and the Thames River are here', explain: 'London is the capital of England and the United Kingdom!' },
+            { q: 'What are the 4 main compass directions?', a: 'north south east west', subject: 'Geography', hint: 'Never Eat Soggy Waffles!', explain: 'North, South, East, West — remember: Never Eat Soggy Waffles!' },
+            { q: 'What state is the Grand Canyon in?', a: 'arizona', subject: 'Geography', hint: 'A hot desert state', explain: 'The Grand Canyon is in Arizona — carved by the Colorado River!' },
+            { q: 'What two countries share the longest border?', a: 'usa canada', subject: 'Geography', hint: 'One is above the other in North America', explain: 'The USA and Canada share the longest border in the world — 5,525 miles!' },
+            { q: 'What continent is Japan on?', a: 'asia', subject: 'Geography', hint: 'The largest continent', explain: 'Japan is an island country in Asia!' },
+            { q: 'What is the smallest state in the USA?', a: 'rhode island', subject: 'Geography', hint: 'It\'s in New England and has "island" in its name', explain: 'Rhode Island is the tiniest state — you could fit 425 of them inside Alaska!' },
+            // ===== SCIENCE (60 questions) =====
+            { q: 'What planet is closest to the Sun?', a: 'mercury', subject: 'Science', hint: 'Named after a liquid metal', explain: 'Mercury is closest — super hot on one side, freezing on the other!' },
+            { q: 'What gas do plants breathe in?', a: 'carbon dioxide', subject: 'Science', hint: 'It\'s what you breathe OUT', explain: 'Plants breathe in carbon dioxide and give us oxygen. Teamwork!' },
+            { q: 'What is H2O?', a: 'water', subject: 'Science', hint: 'You drink it every day!', explain: 'H2O = 2 hydrogen + 1 oxygen = water!' },
+            { q: 'How many legs does a spider have?', a: '8', subject: 'Science', hint: 'More than 6, less than 10', explain: 'Spiders have 8 legs — that\'s how you tell them from insects (6 legs)!' },
+            { q: 'What is the largest planet in our solar system?', a: 'jupiter', subject: 'Science', hint: 'It has a big red spot', explain: 'Jupiter is so big over 1,000 Earths could fit inside!' },
+            { q: 'What color are most plant leaves?', a: 'green', subject: 'Science', hint: 'The color of grass!', explain: 'Green! Because of chlorophyll — it helps plants make food from sunlight!' },
+            { q: 'What force keeps us on the ground?', a: 'gravity', subject: 'Science', hint: 'Why things fall down, not up', explain: 'Gravity pulls everything toward Earth\'s center!' },
+            { q: 'Is the Sun a star or a planet?', a: 'star', subject: 'Science', hint: 'It makes its own light', explain: 'The Sun is a star — a giant ball of hot gas!' },
+            { q: 'What do caterpillars turn into?', a: 'butterfly', subject: 'Science', hint: 'It has colorful wings!', explain: 'Caterpillars transform into butterflies — it\'s called metamorphosis!' },
+            { q: 'How many planets are in our solar system?', a: '8', subject: 'Science', hint: 'Pluto used to be the 9th!', explain: 'There are 8 planets. Pluto was demoted to "dwarf planet" in 2006!' },
+            { q: 'What is the hardest natural substance?', a: 'diamond', subject: 'Science', hint: 'A very expensive gemstone', explain: 'Diamond is the hardest natural substance — it can scratch anything!' },
+            { q: 'What do you call a baby frog?', a: 'tadpole', subject: 'Science', hint: 'It lives in water and has a tail', explain: 'Baby frogs are tadpoles! They start with tails and grow legs.' },
+            { q: 'What gas do we breathe in to survive?', a: 'oxygen', subject: 'Science', hint: 'It\'s about 21% of our air', explain: 'We breathe in oxygen! Our lungs send it to our blood.' },
+            { q: 'What is the closest star to Earth?', a: 'sun', subject: 'Science', hint: 'You see it every day!', explain: 'The Sun is our closest star — about 93 million miles away!' },
+            { q: 'How many bones does an adult human have?', a: '206', subject: 'Science', hint: 'It\'s between 200 and 210', explain: 'Adults have 206 bones! Babies actually have about 270 (they fuse together).' },
+            { q: 'What planet is known as the Red Planet?', a: 'mars', subject: 'Science', hint: 'Named after the Roman god of war', explain: 'Mars looks red because of iron oxide (rust) on its surface!' },
+            { q: 'What animal is the largest on Earth?', a: 'blue whale', subject: 'Science', hint: 'It lives in the ocean', explain: 'Blue whales can be 100 feet long — bigger than any dinosaur!' },
+            { q: 'What is frozen water called?', a: 'ice', subject: 'Science', hint: 'You put it in drinks!', explain: 'Ice is frozen water — it forms at 32°F (0°C)!' },
+            { q: 'What does a thermometer measure?', a: 'temperature', subject: 'Science', hint: 'Hot or cold?', explain: 'A thermometer measures temperature — how hot or cold something is!' },
+            { q: 'What part of the plant takes in water from the soil?', a: 'roots', subject: 'Science', hint: 'They\'re underground!', explain: 'Roots absorb water and nutrients from the soil!' },
+            { q: 'What planet has rings around it?', a: 'saturn', subject: 'Science', hint: 'The 6th planet from the Sun', explain: 'Saturn has beautiful rings made of ice and rock!' },
+            { q: 'How many teeth does a full adult set have?', a: '32', subject: 'Science', hint: 'More than 30!', explain: 'Adults have 32 teeth (including wisdom teeth)!' },
+            { q: 'What type of animal is a frog?', a: 'amphibian', subject: 'Science', hint: 'Lives on land AND in water', explain: 'Frogs are amphibians — they can live both in water and on land!' },
+            { q: 'What is the boiling point of water in Fahrenheit?', a: '212', subject: 'Science', hint: 'It\'s over 200 degrees', explain: 'Water boils at 212°F (100°C)!' },
+            { q: 'What organ lets you see?', a: 'eyes', subject: 'Science', hint: 'You have two of them on your face', explain: 'Your eyes detect light and send signals to your brain!' },
+            { q: 'What is a group of lions called?', a: 'pride', subject: 'Science', hint: 'The same word that means being proud', explain: 'A group of lions is called a pride!' },
+            { q: 'What planet do we live on?', a: 'earth', subject: 'Science', hint: 'The third rock from the Sun!', explain: 'We live on Earth — the third planet from the Sun!' },
+            { q: 'What is the largest organ in the human body?', a: 'skin', subject: 'Science', hint: 'It covers your entire body!', explain: 'Your skin is the largest organ — it protects everything inside!' },
+            { q: 'How many days does it take Earth to orbit the Sun?', a: '365', subject: 'Science', hint: 'Same as days in a year!', explain: 'It takes 365 days — that\'s why a year has 365 days!' },
+            { q: 'What are the three states of matter?', a: 'solid liquid gas', subject: 'Science', hint: 'Ice → Water → Steam', explain: 'Solid, liquid, and gas! Ice melts to water, which boils to steam.' },
+            { q: 'What gas makes up most of Earth\'s atmosphere?', a: 'nitrogen', subject: 'Science', hint: 'It\'s about 78% of the air!', explain: 'Nitrogen makes up 78% of our air! Oxygen is only 21%.' },
+            { q: 'What is the largest insect group?', a: 'beetles', subject: 'Science', hint: 'Not the band — the bugs!', explain: 'Beetles make up about 25% of all known animal species!' },
+            { q: 'What do bees make?', a: 'honey', subject: 'Science', hint: 'It\'s sweet and golden', explain: 'Bees make honey from flower nectar — and they pollinate plants too!' },
+            { q: 'What is baby cow called?', a: 'calf', subject: 'Science', hint: 'Rhymes with "half"', explain: 'A baby cow is a calf! Baby horses are foals, baby sheep are lambs.' },
+            { q: 'How many wings does a butterfly have?', a: '4', subject: 'Science', hint: 'Two on each side!', explain: 'Butterflies have 4 wings — two on each side!' },
+            { q: 'What is the fastest land animal?', a: 'cheetah', subject: 'Science', hint: 'An African big cat with spots', explain: 'Cheetahs can run up to 70 mph — the fastest land animal!' },
+            { q: 'What do plants need to grow? (besides water)', a: 'sunlight', subject: 'Science', hint: 'It comes from the sky during the day', explain: 'Plants need sunlight to make food through photosynthesis!' },
+            { q: 'What covers about 71% of Earth\'s surface?', a: 'water', subject: 'Science', hint: 'Most of our planet is blue!', explain: 'Water covers about 71% of Earth — that\'s why it looks blue from space!' },
+            { q: 'What type of animal lays eggs and has feathers?', a: 'bird', subject: 'Science', hint: 'They can usually fly!', explain: 'Birds lay eggs, have feathers, and most can fly!' },
+            { q: 'What is the center of an atom called?', a: 'nucleus', subject: 'Science', hint: 'Starts with "nuc-"', explain: 'The nucleus is the center of an atom — it has protons and neutrons!' },
+        ],
+        middle: [
+            // ===== ALGEBRA (20 questions) =====
+            { q: 'Solve: 3x + 5 = 20. What is x?', a: '5', subject: 'Algebra', hint: 'Subtract 5 from both sides first', explain: '3x + 5 = 20 → 3x = 15 → x = 5!' },
+            { q: 'Solve: 2x - 8 = 12. What is x?', a: '10', subject: 'Algebra', hint: 'Add 8 to both sides first', explain: '2x - 8 = 12 → 2x = 20 → x = 10!' },
+            { q: 'Solve: 4x + 3 = 19. What is x?', a: '4', subject: 'Algebra', hint: 'Subtract 3 first, then divide', explain: '4x + 3 = 19 → 4x = 16 → x = 4!' },
+            { q: 'Solve: 5x = 45. What is x?', a: '9', subject: 'Algebra', hint: 'Divide both sides by 5', explain: '5x = 45 → x = 9!' },
+            { q: 'Solve: x/3 = 7. What is x?', a: '21', subject: 'Algebra', hint: 'Multiply both sides by 3', explain: 'x/3 = 7 → x = 21!' },
+            { q: 'Solve: 2x + 10 = 30. What is x?', a: '10', subject: 'Algebra', hint: 'Subtract 10, then divide by 2', explain: '2x + 10 = 30 → 2x = 20 → x = 10!' },
+            { q: 'Solve: 6x - 6 = 30. What is x?', a: '6', subject: 'Algebra', hint: 'Add 6 to both sides first', explain: '6x - 6 = 30 → 6x = 36 → x = 6!' },
+            { q: 'Solve: 7x + 1 = 50. What is x?', a: '7', subject: 'Algebra', hint: 'Subtract 1, then divide by 7', explain: '7x + 1 = 50 → 7x = 49 → x = 7!' },
+            { q: 'Solve: x/4 + 3 = 8. What is x?', a: '20', subject: 'Algebra', hint: 'Subtract 3, then multiply by 4', explain: 'x/4 + 3 = 8 → x/4 = 5 → x = 20!' },
+            { q: 'Solve: 3x - 9 = 0. What is x?', a: '3', subject: 'Algebra', hint: 'Add 9, then divide by 3', explain: '3x - 9 = 0 → 3x = 9 → x = 3!' },
+            { q: 'Solve: 10x = 120. What is x?', a: '12', subject: 'Algebra', hint: 'Divide both sides by 10', explain: '10x = 120 → x = 12!' },
+            { q: 'Solve: 8x - 4 = 60. What is x?', a: '8', subject: 'Algebra', hint: 'Add 4, then divide by 8', explain: '8x - 4 = 60 → 8x = 64 → x = 8!' },
+            { q: 'Solve: x/5 = 9. What is x?', a: '45', subject: 'Algebra', hint: 'Multiply both sides by 5', explain: 'x/5 = 9 → x = 45!' },
+            { q: 'Solve: 2x + 7 = 21. What is x?', a: '7', subject: 'Algebra', hint: 'Subtract 7, then divide by 2', explain: '2x + 7 = 21 → 2x = 14 → x = 7!' },
+            { q: 'Solve: 9x = 81. What is x?', a: '9', subject: 'Algebra', hint: 'What times 9 is 81?', explain: '9x = 81 → x = 9!' },
+            { q: 'Solve: 4x - 12 = 20. What is x?', a: '8', subject: 'Algebra', hint: 'Add 12, then divide by 4', explain: '4x - 12 = 20 → 4x = 32 → x = 8!' },
+            { q: 'Solve: x/2 + 10 = 25. What is x?', a: '30', subject: 'Algebra', hint: 'Subtract 10, then multiply by 2', explain: 'x/2 + 10 = 25 → x/2 = 15 → x = 30!' },
+            { q: 'Solve: 5x + 10 = 60. What is x?', a: '10', subject: 'Algebra', hint: 'Subtract 10, then divide by 5', explain: '5x + 10 = 60 → 5x = 50 → x = 10!' },
+            { q: 'Solve: 3x + 12 = 27. What is x?', a: '5', subject: 'Algebra', hint: 'Subtract 12, then divide by 3', explain: '3x + 12 = 27 → 3x = 15 → x = 5!' },
+            { q: 'Solve: 11x = 99. What is x?', a: '9', subject: 'Algebra', hint: 'What times 11 is 99?', explain: '11x = 99 → x = 9!' },
+            // ===== MATH (20 questions) =====
+            { q: 'What is 15% of 200?', a: '30', subject: 'Math', hint: '10% is 20, 5% is 10...', explain: '15% of 200 = 30. 10% + 5% = 20 + 10 = 30!' },
+            { q: 'What is the square root of 144?', a: '12', subject: 'Math', hint: 'What times itself gives 144?', explain: '√144 = 12 because 12 × 12 = 144!' },
+            { q: 'What is 25% of 80?', a: '20', subject: 'Math', hint: '25% means one quarter', explain: '25% of 80 = 20. Divide 80 by 4!' },
+            { q: 'What is 20% of 150?', a: '30', subject: 'Math', hint: '20% = one fifth', explain: '20% of 150 = 30. Divide by 5!' },
+            { q: 'What is the square root of 81?', a: '9', subject: 'Math', hint: 'Between 8 and 10', explain: '√81 = 9 because 9 × 9 = 81!' },
+            { q: 'What is 50% of 126?', a: '63', subject: 'Math', hint: '50% just means half!', explain: '50% of 126 = 63!' },
+            { q: 'What is 7 squared?', a: '49', subject: 'Math', hint: '7 times itself', explain: '7² = 49!' },
+            { q: 'What is 2 to the power of 8?', a: '256', subject: 'Math', hint: 'Keep doubling from 2', explain: '2⁸ = 256. 2→4→8→16→32→64→128→256!' },
+            { q: 'What is 10% of 450?', a: '45', subject: 'Math', hint: 'Just move the decimal left once', explain: '10% of 450 = 45. Move the decimal one place!' },
+            { q: 'What is the square root of 64?', a: '8', subject: 'Math', hint: 'Same as a chess board row', explain: '√64 = 8 because 8 × 8 = 64!' },
+            { q: 'What is 8 squared?', a: '64', subject: 'Math', hint: '8 times itself', explain: '8² = 64!' },
+            { q: 'What is 75% of 200?', a: '150', subject: 'Math', hint: '75% = 3/4', explain: '75% of 200 = 150. Three quarters of 200!' },
+            { q: 'What is 5 cubed?', a: '125', subject: 'Math', hint: '5 x 5 x 5', explain: '5³ = 5 × 5 × 5 = 125!' },
+            { q: 'What is the square root of 100?', a: '10', subject: 'Math', hint: 'A nice round number!', explain: '√100 = 10!' },
+            { q: 'What is 2 to the power of 10?', a: '1024', subject: 'Math', hint: 'A kilobyte in computing!', explain: '2¹⁰ = 1024. That\'s why a kilobyte is 1024 bytes!' },
+            { q: 'What is 33% of 300? (round)', a: '99', subject: 'Math', hint: '1/3 of 300', explain: '33% of 300 ≈ 99. One third of 300!' },
+            { q: 'What is 12 squared?', a: '144', subject: 'Math', hint: '12 times itself', explain: '12² = 144!' },
+            { q: 'What is the square root of 225?', a: '15', subject: 'Math', hint: 'Between 14 and 16', explain: '√225 = 15 because 15 × 15 = 225!' },
+            { q: 'What is 40% of 50?', a: '20', subject: 'Math', hint: '40% = 2/5', explain: '40% of 50 = 20. Two fifths of 50!' },
+            { q: 'What is 3 to the power of 4?', a: '81', subject: 'Math', hint: '3 x 3 x 3 x 3', explain: '3⁴ = 81. 3→9→27→81!' },
+            // ===== SPELLING (20 words) =====
+            { q: 'Listen and spell the word!', a: 'definitely', subject: 'Spelling', spoken: 'definitely', hint: '"finite" is inside it', explain: 'De-FINITE-ly. No "a" anywhere!' },
+            { q: 'Listen and spell the word!', a: 'necessary', subject: 'Spelling', spoken: 'necessary', hint: '1 c, 2 s\'s', explain: 'NeCeSSary — 1 Collar, 2 Socks!' },
+            { q: 'Listen and spell the word!', a: 'separate', subject: 'Spelling', spoken: 'separate', hint: 'A RAT is hiding in it', explain: 'Sep-A-RAT-e!' },
+            { q: 'Listen and spell the word!', a: 'receive', subject: 'Spelling', spoken: 'receive', hint: '"i before e except after c"', explain: 'Re-C-E-I-ve. Except after C!' },
+            { q: 'Listen and spell the word!', a: 'conscience', subject: 'Spelling', spoken: 'conscience', hint: '"science" is at the end', explain: 'Con-SCIENCE!' },
+            { q: 'Listen and spell the word!', a: 'rhythm', subject: 'Spelling', spoken: 'rhythm', hint: 'No regular vowels! R-h-y-t-h-m', explain: 'Rhythm has NO normal vowels. Y does all the work!' },
+            { q: 'Listen and spell the word!', a: 'occurrence', subject: 'Spelling', spoken: 'occurrence', hint: 'Double c, double r', explain: 'Oc-CUR-RENCE. Two of each!' },
+            { q: 'Listen and spell the word!', a: 'embarrass', subject: 'Spelling', spoken: 'embarrass', hint: 'Double r, double s', explain: 'Em-baR-RaSS!' },
+            { q: 'Listen and spell the word!', a: 'privilege', subject: 'Spelling', spoken: 'privilege', hint: 'No "d" — ends in "-lege"', explain: 'Priv-i-lege. No D!' },
+            { q: 'Listen and spell the word!', a: 'environment', subject: 'Spelling', spoken: 'environment', hint: 'Don\'t forget the "n" before "ment"', explain: 'Environ-MENT. The N is easy to miss!' },
+            { q: 'Listen and spell the word!', a: 'government', subject: 'Spelling', spoken: 'government', hint: 'Don\'t skip the "n" in the middle!', explain: 'Gover-N-ment. That N in the middle matters!' },
+            { q: 'Listen and spell the word!', a: 'temperature', subject: 'Spelling', spoken: 'temperature', hint: 'Temp-er-a-ture', explain: 'TEMP-er-a-TURE. Don\'t skip the second "e!"' },
+            { q: 'Listen and spell the word!', a: 'immediately', subject: 'Spelling', spoken: 'immediately', hint: 'Double m, ends in "-ately"', explain: 'Im-MED-i-ate-ly!' },
+            { q: 'Listen and spell the word!', a: 'recommend', subject: 'Spelling', spoken: 'recommend', hint: 'One c, two m\'s', explain: 'Re-coM-Mend. One C, two M\'s!' },
+            { q: 'Listen and spell the word!', a: 'beginning', subject: 'Spelling', spoken: 'beginning', hint: 'Double n in the middle', explain: 'Be-giN-Ning. Double N!' },
+            { q: 'Listen and spell the word!', a: 'argument', subject: 'Spelling', spoken: 'argument', hint: 'No "e" after the "u"', explain: 'Argument drops the E from argue! Argu-ment.' },
+            { q: 'Listen and spell the word!', a: 'especially', subject: 'Spelling', spoken: 'especially', hint: 'Starts with "esp-" not "exp-"', explain: 'E-S-P-ecially! Not "exp!"' },
+            { q: 'Listen and spell the word!', a: 'disappear', subject: 'Spelling', spoken: 'disappear', hint: 'One s, two p\'s', explain: 'Dis-aP-Pear! One S, two P\'s!' },
+            { q: 'Listen and spell the word!', a: 'appreciate', subject: 'Spelling', spoken: 'appreciate', hint: 'Double p, ends in "-iate"', explain: 'Ap-PRE-ci-ate!' },
+            { q: 'Listen and spell the word!', a: 'exaggerate', subject: 'Spelling', spoken: 'exaggerate', hint: 'Double g in the middle', explain: 'Ex-aG-Ger-ate!' },
+            // ===== SCIENCE (20 questions) =====
+            { q: 'What is the powerhouse of the cell?', a: 'mitochondria', subject: 'Science', hint: 'Starts with "mito-"', explain: 'Mitochondria are like tiny batteries inside every cell!' },
+            { q: 'What is the chemical symbol for Gold?', a: 'au', subject: 'Science', hint: 'From Latin "aurum"', explain: 'Gold is Au from the Latin "aurum" meaning "shining dawn!"' },
+            { q: 'What gas do humans exhale?', a: 'carbon dioxide', subject: 'Science', hint: 'What plants need to breathe', explain: 'We breathe out CO₂ and plants use it!' },
+            { q: 'What organ pumps blood through the body?', a: 'heart', subject: 'Science', hint: 'Beats about 100,000 times a day', explain: 'Your heart pumps blood non-stop!' },
+            { q: 'What is the boiling point of water in Celsius?', a: '100', subject: 'Science', hint: 'A nice round number', explain: 'Water boils at 100°C (212°F)!' },
+            { q: 'What type of rock forms from cooled lava?', a: 'igneous', subject: 'Science', hint: '"Igne-" means fire in Latin', explain: 'Igneous rock forms when lava cools!' },
+            { q: 'What is the freezing point of water in Fahrenheit?', a: '32', subject: 'Science', hint: 'Below this, you get ice!', explain: 'Water freezes at 32°F (0°C)!' },
+            { q: 'What are the building blocks of all matter?', a: 'atoms', subject: 'Science', hint: 'Really, really tiny particles', explain: 'Atoms are the building blocks of everything!' },
+            { q: 'What connects muscles to bones?', a: 'tendons', subject: 'Science', hint: 'Starts with "ten-"', explain: 'Tendons connect muscles to bones so you can move!' },
+            { q: 'What is Earth\'s natural satellite?', a: 'moon', subject: 'Science', hint: 'You see it at night!', explain: 'The Moon orbits Earth — it takes about 27 days!' },
+            { q: 'What causes tides in the ocean?', a: 'moon', subject: 'Science', hint: 'Its gravity pulls on our water', explain: 'The Moon\'s gravity causes ocean tides!' },
+            { q: 'What is the study of living things called?', a: 'biology', subject: 'Science', hint: '"Bio" means life', explain: 'Biology = the study of life! Bio = life, -ology = study.' },
+            { q: 'What are the two main types of blood vessels?', a: 'arteries veins', subject: 'Science', hint: 'One carries blood away, one brings it back', explain: 'Arteries carry blood FROM the heart, veins carry it BACK!' },
+            { q: 'What layer of gas protects us from UV rays?', a: 'ozone', subject: 'Science', hint: 'It\'s a layer in the atmosphere', explain: 'The ozone layer blocks harmful UV radiation from the Sun!' },
+            { q: 'What is the chemical symbol for Oxygen?', a: 'o', subject: 'Science', hint: 'Just one letter!', explain: 'Oxygen\'s symbol is O!' },
+            { q: 'How many chambers does the human heart have?', a: '4', subject: 'Science', hint: 'Two on top, two on bottom', explain: 'The heart has 4 chambers: 2 atria and 2 ventricles!' },
+            { q: 'What is the study of weather called?', a: 'meteorology', subject: 'Science', hint: 'Not about meteors!', explain: 'Meteorology is the study of weather and atmosphere!' },
+            { q: 'What part of the body do lungs help with?', a: 'breathing', subject: 'Science', hint: 'In and out, in and out...', explain: 'Lungs help you breathe — they exchange oxygen and CO₂!' },
+            { q: 'What are rocks made of?', a: 'minerals', subject: 'Science', hint: 'Tiny crystals and substances', explain: 'Rocks are made of minerals — natural solid substances!' },
+            { q: 'What planet is known for its rings?', a: 'saturn', subject: 'Science', hint: 'The 6th planet from the Sun', explain: 'Saturn has thousands of beautiful rings made of ice and rock!' },
+            // ===== ENGLISH / HISTORY / CIVICS (20 questions) =====
+            { q: 'Who wrote Romeo and Juliet?', a: 'shakespeare', subject: 'English', hint: 'Famous English playwright from the 1500s', explain: 'William Shakespeare wrote it around 1596!' },
+            { q: 'What year did WWII end?', a: '1945', subject: 'History', hint: 'In the 1940s', explain: 'WWII ended in 1945!' },
+            { q: 'Name the 3 branches of US government (executive, legislative, ___)', a: 'judicial', subject: 'Civics', hint: 'Think judges and courts', explain: 'The judicial branch is the court system!' },
+            { q: 'What document starts with "We the People"?', a: 'constitution', subject: 'Civics', hint: 'The supreme law of the United States', explain: 'The US Constitution starts with "We the People!"' },
+            { q: 'Who is the author of "Harry Potter"?', a: 'rowling', subject: 'English', hint: 'Initials are J.K.', explain: 'J.K. Rowling wrote all seven Harry Potter books!' },
+            { q: 'What war was fought between the North and South in the US?', a: 'civil war', subject: 'History', hint: 'In the 1860s', explain: 'The Civil War (1861-1865) ended slavery!' },
+            { q: 'What is a synonym for "happy"?', a: 'glad', subject: 'English', hint: 'Starts with "gl"', explain: 'Glad, joyful, cheerful — all mean happy!' },
+            { q: 'What ocean did the Titanic sink in?', a: 'atlantic', subject: 'History', hint: 'Between America and Europe', explain: 'The Titanic sank in the Atlantic Ocean in 1912!' },
+            { q: 'What is the opposite of "ancient"?', a: 'modern', subject: 'English', hint: 'Means new or current', explain: 'Modern is the opposite of ancient!' },
+            { q: 'Who gave the "I Have a Dream" speech?', a: 'martin luther king', subject: 'History', hint: 'A famous civil rights leader', explain: 'Martin Luther King Jr. gave it in 1963 at the March on Washington!' },
+            { q: 'What is the plural of "child"?', a: 'children', subject: 'English', hint: 'An irregular plural — doesn\'t just add "s"', explain: 'Children is the plural of child — an irregular plural!' },
+            { q: 'What holiday celebrates American independence?', a: 'fourth of july', subject: 'History', hint: 'Fireworks and barbecues!', explain: 'July 4th celebrates the Declaration of Independence in 1776!' },
+            { q: 'What is the past tense of "run"?', a: 'ran', subject: 'English', hint: 'Irregular verb — doesn\'t add "-ed"', explain: 'Run → Ran. It\'s irregular — not "runned!"' },
+            { q: 'Who was the 16th president of the USA?', a: 'lincoln', subject: 'History', hint: 'He freed the slaves and wore a tall hat', explain: 'Abraham Lincoln — he led the country through the Civil War!' },
+            { q: 'What does "benevolent" mean?', a: 'kind', subject: 'English', hint: '"Bene" means good in Latin', explain: 'Benevolent means kind or well-meaning!' },
+            { q: 'What ancient civilization built the pyramids?', a: 'egypt', subject: 'History', hint: 'On the Nile River in Africa', explain: 'Ancient Egyptians built the pyramids over 4,500 years ago!' },
+            { q: 'What is an antonym?', a: 'opposite', subject: 'English', hint: 'The reverse of a synonym', explain: 'An antonym is a word with the OPPOSITE meaning!' },
+            { q: 'What was the first country to land on the Moon?', a: 'usa', subject: 'History', hint: 'Neil Armstrong was the first person', explain: 'The USA landed on the Moon on July 20, 1969!' },
+            { q: 'What is a verb?', a: 'action word', subject: 'English', hint: 'Run, jump, eat, think...', explain: 'A verb is an action word — it tells what someone does!' },
+            { q: 'Who discovered America in 1492?', a: 'columbus', subject: 'History', hint: 'He sailed from Spain', explain: 'Christopher Columbus sailed from Spain in 1492!' },
+        ],
+        high: [
+            // ===== ALGEBRA / CALCULUS (20 questions) =====
+            { q: 'Solve: x\u00B2 - 9 = 0. (positive answer)', a: '3', subject: 'Algebra', hint: 'What squared gives 9?', explain: 'x² = 9 → x = 3!' },
+            { q: 'What is the derivative of x\u00B2?', a: '2x', subject: 'Calculus', hint: 'Bring the power down, reduce by 1', explain: 'Derivative of x² = 2x!' },
+            { q: 'Solve: x\u00B2 - 16 = 0. (positive answer)', a: '4', subject: 'Algebra', hint: 'What times itself gives 16?', explain: 'x² = 16 → x = 4!' },
+            { q: 'Solve: 2x\u00B2 = 50. (positive answer)', a: '5', subject: 'Algebra', hint: 'Divide by 2 first', explain: '2x² = 50 → x² = 25 → x = 5!' },
+            { q: 'What is the slope of y = 3x + 7?', a: '3', subject: 'Algebra', hint: 'In y = mx + b, slope is m', explain: 'Slope = 3. The number in front of x!' },
+            { q: 'What is the derivative of 5x\u00B3?', a: '15x2', subject: 'Calculus', hint: 'Multiply coefficient by power, reduce power by 1', explain: '5x³ → 5×3 = 15, power drops to 2 → 15x²!' },
+            { q: 'Solve: x\u00B2 + 2x - 8 = 0. (positive answer)', a: '2', subject: 'Algebra', hint: 'Factor: what multiplies to -8 and adds to 2?', explain: '(x+4)(x-2) = 0 → x = 2!' },
+            { q: 'What is the slope of y = -2x + 5?', a: '-2', subject: 'Algebra', hint: 'The number in front of x', explain: 'Slope = -2. Negative means the line goes down!' },
+            { q: 'Solve: x\u00B2 - 25 = 0. (positive answer)', a: '5', subject: 'Algebra', hint: 'What squared is 25?', explain: 'x² = 25 → x = 5!' },
+            { q: 'What is the derivative of 3x\u00B2 + 2x?', a: '6x + 2', subject: 'Calculus', hint: 'Take derivative of each part separately', explain: '3x² → 6x, 2x → 2. Answer: 6x + 2!' },
+            { q: 'Solve: x\u00B2 - 36 = 0. (positive answer)', a: '6', subject: 'Algebra', hint: 'What squared is 36?', explain: 'x² = 36 → x = 6!' },
+            { q: 'What is the y-intercept of y = 4x - 3?', a: '-3', subject: 'Algebra', hint: 'In y = mx + b, the y-intercept is b', explain: 'y-intercept = -3. Where the line crosses the y-axis!' },
+            { q: 'Solve: 3x\u00B2 = 75. (positive answer)', a: '5', subject: 'Algebra', hint: 'Divide by 3 first', explain: '3x² = 75 → x² = 25 → x = 5!' },
+            { q: 'What is the derivative of 10x?', a: '10', subject: 'Calculus', hint: 'The derivative of any constant × x is the constant', explain: 'Derivative of 10x = 10!' },
+            { q: 'What is the derivative of x\u00B3?', a: '3x2', subject: 'Calculus', hint: 'Bring down the 3, reduce power', explain: 'x³ → 3x²!' },
+            { q: 'Solve: x\u00B2 - 49 = 0. (positive answer)', a: '7', subject: 'Algebra', hint: 'What squared is 49?', explain: 'x² = 49 → x = 7!' },
+            { q: 'Solve: x\u00B2 + 5x + 6 = 0. (smaller positive answer)', a: '-2', subject: 'Algebra', hint: 'Factor: (x+2)(x+3) = 0', explain: '(x+2)(x+3) = 0 → x = -2 or x = -3. Smaller: -2!' },
+            { q: 'What is the slope of a horizontal line?', a: '0', subject: 'Algebra', hint: 'It doesn\'t go up or down', explain: 'Horizontal lines have slope 0 — perfectly flat!' },
+            { q: 'What is the derivative of 7?', a: '0', subject: 'Calculus', hint: 'Constants don\'t change!', explain: 'Derivative of any constant = 0. No change!' },
+            { q: 'Solve: 4x\u00B2 = 100. (positive answer)', a: '5', subject: 'Algebra', hint: 'Divide by 4, then square root', explain: '4x² = 100 → x² = 25 → x = 5!' },
+            // ===== SPELLING (20 words) =====
+            { q: 'Listen and spell the word!', a: 'entrepreneur', subject: 'Spelling', spoken: 'entrepreneur', hint: 'French word for "one who undertakes"', explain: 'Entre-pre-neur — someone who starts a business!' },
+            { q: 'Listen and spell the word!', a: 'accommodation', subject: 'Spelling', spoken: 'accommodation', hint: 'Double c, double m', explain: 'Ac-COM-mo-da-tion. Room for 2 c\'s and 2 m\'s!' },
+            { q: 'Listen and spell the word!', a: 'bureaucracy', subject: 'Spelling', spoken: 'bureaucracy', hint: 'Starts with "bureau"', explain: 'Bureau-cracy. Government paperwork!' },
+            { q: 'Listen and spell the word!', a: 'surveillance', subject: 'Spelling', spoken: 'surveillance', hint: '"veil" is hiding inside', explain: 'Sur-VEIL-lance!' },
+            { q: 'Listen and spell the word!', a: 'miscellaneous', subject: 'Spelling', spoken: 'miscellaneous', hint: 'Double l, ends in "-eous"', explain: 'Mis-cel-LA-ne-ous!' },
+            { q: 'Listen and spell the word!', a: 'acquaintance', subject: 'Spelling', spoken: 'acquaintance', hint: 'Starts with "acqu-"', explain: 'Ac-QUAINT-ance!' },
+            { q: 'Listen and spell the word!', a: 'hemorrhage', subject: 'Spelling', spoken: 'hemorrhage', hint: 'Double r, starts with "hem-"', explain: 'Hem-or-rhage. Double R!' },
+            { q: 'Listen and spell the word!', a: 'renaissance', subject: 'Spelling', spoken: 'renaissance', hint: 'Double s, ends in "-ance"', explain: 'Re-NAIS-sance. French for "rebirth!"' },
+            { q: 'Listen and spell the word!', a: 'questionnaire', subject: 'Spelling', spoken: 'questionnaire', hint: 'Double n, ends in "-aire"', explain: 'Question-NAIRE. Double N!' },
+            { q: 'Listen and spell the word!', a: 'mischievous', subject: 'Spelling', spoken: 'mischievous', hint: 'Only 3 syllables, NOT 4!', explain: 'Mis-chie-vous. NOT "mis-CHEEV-ee-us!"' },
+            { q: 'Listen and spell the word!', a: 'liaison', subject: 'Spelling', spoken: 'liaison', hint: 'Two i\'s and one a', explain: 'L-I-A-I-S-O-N. Two i\'s!' },
+            { q: 'Listen and spell the word!', a: 'guarantee', subject: 'Spelling', spoken: 'guarantee', hint: 'Starts with "gua-"', explain: 'Gua-ran-tee. That "gua" is the tricky part!' },
+            { q: 'Listen and spell the word!', a: 'psychology', subject: 'Spelling', spoken: 'psychology', hint: 'Silent "p" at the start!', explain: 'P-sychology. The P is silent!' },
+            { q: 'Listen and spell the word!', a: 'vacuum', subject: 'Spelling', spoken: 'vacuum', hint: 'Double u!', explain: 'Vac-U-U-m. One of the few English words with "uu!"' },
+            { q: 'Listen and spell the word!', a: 'onomatopoeia', subject: 'Spelling', spoken: 'onomatopoeia', hint: 'It IS what it describes (buzz, pop, crash)', explain: 'Ono-mato-poeia — words that sound like what they describe!' },
+            { q: 'Listen and spell the word!', a: 'phenomenon', subject: 'Spelling', spoken: 'phenomenon', hint: 'Ends in "-enon" not "-enun"', explain: 'Phe-nom-e-non!' },
+            { q: 'Listen and spell the word!', a: 'perseverance', subject: 'Spelling', spoken: 'perseverance', hint: 'Per-se-ver-ance', explain: 'Per-sev-er-ance — never giving up!' },
+            { q: 'Listen and spell the word!', a: 'lieutenant', subject: 'Spelling', spoken: 'lieutenant', hint: 'Lieu-ten-ant — "lieu" means place', explain: 'Lieu-tenant. "Lieu" is French for "place!"' },
+            { q: 'Listen and spell the word!', a: 'catastrophe', subject: 'Spelling', spoken: 'catastrophe', hint: 'Ends in "-ophe" not "-ophy"', explain: 'Cat-as-tro-phe!' },
+            { q: 'Listen and spell the word!', a: 'conscience', subject: 'Spelling', spoken: 'conscience', hint: '"Science" is hiding inside!', explain: 'Con-SCIENCE — your inner scientist of right and wrong!' },
+            // ===== CHEMISTRY (15 questions) =====
+            { q: 'What element has atomic number 6?', a: 'carbon', subject: 'Chemistry', hint: 'In diamonds AND pencils', explain: 'Carbon (#6) — basis of all life!' },
+            { q: 'What is the pH of pure water?', a: '7', subject: 'Chemistry', hint: 'Middle of the 0-14 scale', explain: 'Water = pH 7. Perfectly neutral!' },
+            { q: 'What is the chemical formula for table salt?', a: 'nacl', subject: 'Chemistry', hint: 'Sodium + Chlorine', explain: 'NaCl = Sodium + Chlorine!' },
+            { q: 'How many elements are in the periodic table? (approx)', a: '118', subject: 'Chemistry', hint: 'Between 115 and 120', explain: '118 confirmed elements!' },
+            { q: 'What is the chemical symbol for Iron?', a: 'fe', subject: 'Chemistry', hint: 'From Latin "ferrum"', explain: 'Fe — from the Latin "ferrum!"' },
+            { q: 'What type of bond shares electrons?', a: 'covalent', subject: 'Chemistry', hint: 'Co- means "together"', explain: 'Covalent bonds SHARE electrons!' },
+            { q: 'What is the chemical symbol for Sodium?', a: 'na', subject: 'Chemistry', hint: 'From Latin "natrium"', explain: 'Na — from the Latin "natrium!"' },
+            { q: 'What is the most abundant element in the universe?', a: 'hydrogen', subject: 'Chemistry', hint: 'The lightest element (#1)', explain: 'Hydrogen makes up about 75% of all matter!' },
+            { q: 'What is the chemical formula for carbon dioxide?', a: 'co2', subject: 'Chemistry', hint: 'One carbon, two oxygens', explain: 'CO₂ = one Carbon + two Oxygens!' },
+            { q: 'What charge does a proton have?', a: 'positive', subject: 'Chemistry', hint: 'Opposite of an electron', explain: 'Protons are positive, electrons are negative!' },
+            { q: 'What is the chemical symbol for Potassium?', a: 'k', subject: 'Chemistry', hint: 'From Latin "kalium"', explain: 'K — from the Latin "kalium!" Found in bananas.' },
+            { q: 'What state of matter has no fixed shape or volume?', a: 'gas', subject: 'Chemistry', hint: 'It fills any container', explain: 'Gas expands to fill any container!' },
+            { q: 'What is the atomic number of Oxygen?', a: '8', subject: 'Chemistry', hint: 'It\'s a single digit', explain: 'Oxygen is element #8!' },
+            { q: 'What is an exothermic reaction?', a: 'releases heat', subject: 'Chemistry', hint: '"Exo" means out, "therm" means heat', explain: 'Exothermic = releases heat. Fire is exothermic!' },
+            { q: 'What subatomic particle has no charge?', a: 'neutron', subject: 'Chemistry', hint: 'Its name sounds like "neutral"', explain: 'Neutrons are neutral — no charge!' },
+            // ===== ECONOMICS / CIVICS (15 questions) =====
+            { q: 'What is GDP?', a: 'gross domestic product', subject: 'Economics', hint: 'Measures a country\'s total economic output', explain: 'GDP = everything a country makes and sells in a year!' },
+            { q: 'What amendment gives freedom of speech?', a: '1', subject: 'Civics', hint: 'The very first one!', explain: 'The 1st Amendment protects free speech!' },
+            { q: 'What does "inflation" mean in economics?', a: 'rising prices', subject: 'Economics', hint: 'Things cost more than they used to', explain: 'Inflation = prices going up over time!' },
+            { q: 'How many justices sit on the US Supreme Court?', a: '9', subject: 'Civics', hint: 'Single digit', explain: '9 Supreme Court Justices!' },
+            { q: 'What is compound interest?', a: 'interest on interest', subject: 'Economics', hint: 'You earn interest on your interest', explain: 'Compound interest = snowball effect!' },
+            { q: 'What amendment abolished slavery?', a: '13', subject: 'Civics', hint: 'An unlucky number for slaveholders', explain: 'The 13th Amendment abolished slavery in 1865!' },
+            { q: 'What is supply and demand?', a: 'economic principle', subject: 'Economics', hint: 'More demand + less supply = higher prices', explain: 'Supply and demand determines prices in a free market!' },
+            { q: 'How old must you be to vote in the US?', a: '18', subject: 'Civics', hint: 'Same age as graduation from high school', explain: 'You must be 18 to vote — the 26th Amendment set this!' },
+            { q: 'What is a recession?', a: 'economic decline', subject: 'Economics', hint: 'When the economy shrinks for 2+ quarters', explain: 'A recession is when the economy contracts — fewer jobs, less spending.' },
+            { q: 'What does "veto" mean?', a: 'reject', subject: 'Civics', hint: 'The president can do this to a bill', explain: 'Veto means reject. The president can veto bills passed by Congress!' },
+            { q: 'What is the minimum wage designed to do?', a: 'protect workers', subject: 'Economics', hint: 'The lowest legal pay', explain: 'Minimum wage sets the lowest amount employers can legally pay!' },
+            { q: 'How many senators does each state have?', a: '2', subject: 'Civics', hint: 'Equal for every state!', explain: 'Every state gets exactly 2 senators!' },
+            { q: 'What is a tax refund?', a: 'money back', subject: 'Economics', hint: 'When you overpaid your taxes', explain: 'A tax refund is money the government returns when you overpaid!' },
+            { q: 'What is the Bill of Rights?', a: 'first 10 amendments', subject: 'Civics', hint: 'Added to the Constitution', explain: 'The Bill of Rights = first 10 amendments to the Constitution!' },
+            { q: 'What does "monopoly" mean in economics?', a: 'one seller', subject: 'Economics', hint: 'When only one company controls a market', explain: 'A monopoly = one company dominates an entire market!' },
+            // ===== BIOLOGY / HISTORY / MATH (10 questions) =====
+            { q: 'What is the formula for the area of a circle?', a: 'pi r squared', subject: 'Math', hint: 'Uses pi and the radius', explain: 'Area = πr²!' },
+            { q: 'Name the process plants use to make food from sunlight.', a: 'photosynthesis', subject: 'Biology', hint: '"Photo" means light', explain: 'Photosynthesis = sunlight + water + CO₂ → sugar + oxygen!' },
+            { q: 'Who was the first President of the United States?', a: 'washington', subject: 'History', hint: 'The capital is named after him', explain: 'George Washington (1789-1797)!' },
+            { q: 'What is DNA short for?', a: 'deoxyribonucleic acid', subject: 'Biology', hint: 'Starts with "deoxyribo..."', explain: 'DNA = the instruction manual in every cell!' },
+            { q: 'What vitamin does the Sun help your body produce?', a: 'd', subject: 'Biology', hint: '4th letter of the alphabet', explain: 'Vitamin D! Sunlight helps your body make it.' },
+            { q: 'Who painted the Mona Lisa?', a: 'da vinci', subject: 'History', hint: 'Also an inventor and scientist', explain: 'Leonardo da Vinci painted it around 1503!' },
+            { q: 'What year did the US declare independence?', a: '1776', subject: 'History', hint: 'July 4th of this year', explain: '1776! July 4th, Independence Day!' },
+            { q: 'What is the Pythagorean theorem formula?', a: 'a2 + b2 = c2', subject: 'Math', hint: 'Two sides squared = hypotenuse squared', explain: 'a² + b² = c² for right triangles!' },
+            { q: 'What is RNA\'s main function?', a: 'protein synthesis', subject: 'Biology', hint: 'It carries DNA\'s instructions', explain: 'RNA reads DNA instructions and helps build proteins!' },
+            { q: 'What is the quadratic formula used for?', a: 'solving equations', subject: 'Math', hint: 'Works on ax² + bx + c = 0', explain: 'The quadratic formula solves any equation in the form ax² + bx + c = 0!' },
+        ]
+    };
+
+    // ========== CHANCE CARD DECKS ==========
+    const chanceCards = {
+        elementary: [
+            { text: 'You shared your lunch with a new kid! Great karma!', effect: { money: 10, balance: 1 }, good: true },
+            { text: 'Won the reading challenge! 50 books!', effect: { interest: 2, commitment: 1 }, good: true },
+            { text: 'Your art was displayed in the hallway!', effect: { money: 5, interest: 1 }, good: true },
+            { text: 'Won the kickball championship!', effect: { balance: 2 }, good: true },
+            { text: 'Perfect attendance award!', effect: { money: 15, commitment: 2 }, good: true },
+            { text: 'Helped a younger student learn to read!', effect: { balance: 1, commitment: 1 }, good: true },
+            { text: 'Lost your homework on the bus.', effect: { commitment: -1 }, good: false },
+            { text: 'Caught a cold, missed a week.', effect: { commitment: -1 }, good: false },
+            { text: 'Got in trouble for talking in class.', effect: { commitment: -1, balance: -1 }, good: false },
+            { text: 'Broke your glasses on the playground.', effect: { money: -15 }, good: false },
+        ],
+        middle: [
+            { text: 'Won the school science fair!', effect: { interest: 2, money: 20 }, good: true },
+            { text: 'Made the honor roll!', effect: { commitment: 2, money: 15 }, good: true },
+            { text: 'Starred in the school musical!', effect: { interest: 1, balance: 2 }, good: true },
+            { text: 'Won the coding club hackathon!', effect: { interest: 2, money: 15 }, good: true },
+            { text: 'Got a tutoring gig! Making money!', effect: { money: 25, commitment: 1 }, good: true },
+            { text: 'Phone confiscated. Detention!', effect: { commitment: -2 }, good: false },
+            { text: 'Failed to turn in a big project.', effect: { commitment: -2, money: -10 }, good: false },
+            { text: 'Got in a fight. Suspended 1 day.', effect: { commitment: -2, balance: -2 }, good: false },
+            { text: 'Spent all your money on video games.', effect: { money: -20, balance: -1 }, good: false },
+            { text: 'Skipped studying for a party.', effect: { commitment: -2 }, good: false },
+        ],
+        high: [
+            { text: 'Accepted to an honors program!', effect: { commitment: 3, money: 30 }, good: true },
+            { text: 'Promoted at your part-time job!', effect: { money: 50, interest: 1 }, good: true },
+            { text: 'Won a regional competition!', effect: { balance: 2, money: 25 }, good: true },
+            { text: 'Got a scholarship recommendation!', effect: { money: 75, commitment: 2 }, good: true },
+            { text: 'Volunteered 100+ hours!', effect: { commitment: 2, balance: 2 }, good: true },
+            { text: 'Aced the SAT!', effect: { commitment: 3, money: 20 }, good: true },
+            { text: 'Fender bender in the parking lot!', effect: { money: -50 }, good: false },
+            { text: 'Slept through the SAT exam!', effect: { commitment: -3 }, good: false },
+            { text: 'Social media drama. Teachers got involved.', effect: { balance: -2, commitment: -1 }, good: false },
+            { text: 'Caught plagiarizing! Academic probation!', effect: { commitment: -3, money: -20 }, good: false },
+            { text: 'Spent all savings on a car that broke down.', effect: { money: -60 }, good: false },
+        ]
+    };
+
+    // ========== BOARD DEFINITION ==========
+    function initBoard() {
+        boardSpaces = [
+            // === ELEMENTARY (Age 7-10) tiles 0-14 ===
+            { age: 7, type: 'start', label: '2nd Grade!', desc: 'Your journey begins! Time to learn!', color: '#FFB3BA', icon: '\u{1F392}' },
+            { age: 7, type: 'challenge', label: 'Spelling Test', desc: 'Time to spell a word!', color: '#B3D9FF', icon: '\u{1F4DD}', subjects: ['Spelling'] },
+            { age: 7, type: 'chance', label: 'Chance!', desc: 'Draw a card...', color: '#FFFFBA', icon: '\u2753' },
+            { age: 8, type: 'challenge', label: 'Math Quiz', desc: 'Solve the math problem!', color: '#B3D9FF', icon: '\u{1F522}', subjects: ['Math'] },
+            { age: 8, type: 'reward', label: 'Gold Star!', desc: 'Perfect behavior! +$20', color: '#BAFFC9', icon: '\u2B50', effect: { money: 20, commitment: 1 } },
+            { age: 8, type: 'career', label: 'Career Day!', desc: 'A firefighter visits class. What do you want to be?', color: '#FFD4A3', icon: '\u{1F692}' },
+            { age: 9, type: 'chance', label: 'Chance!', desc: 'Draw a card...', color: '#FFFFBA', icon: '\u2753' },
+            { age: 9, type: 'challenge', label: 'Science Quiz', desc: 'Answer a science question!', color: '#B3D9FF', icon: '\u{1F52C}', subjects: ['Science'] },
+            { age: 9, type: 'reward', label: 'Field Trip!', desc: 'Trip to the museum! +$10, +Interest', color: '#BAFFC9', icon: '\u{1F3DB}', effect: { money: 10, interest: 1 } },
+            { age: 10, type: 'challenge', label: 'Geography Test', desc: 'Test your world knowledge!', color: '#B3D9FF', icon: '\u{1F30D}', subjects: ['Geography'] },
+            { age: 10, type: 'chance', label: 'Chance!', desc: 'Draw a card...', color: '#FFFFBA', icon: '\u2753' },
+            { age: 10, type: 'pathsplit', label: 'After School?', desc: 'What do you do after school?', color: '#E8BAFF', icon: '\u{1F500}',
+                options: ['Study hard (+2 Commit)', 'Play sports (+2 Balance)', 'Play video games (-1 Commit)'],
+                effects: [{ commitment: 2 }, { balance: 2 }, { commitment: -1 }],
+                minCommitment: [0, 0, 0] },
+            { age: 10, type: 'challenge', label: 'Reading Test', desc: 'Can you answer a reading question?', color: '#B3D9FF', icon: '\u{1F4D6}', subjects: ['Science', 'Geography'] },
+            { age: 10, type: 'career', label: 'Dream Job Essay', desc: 'Write about what you want to be!', color: '#FFD4A3', icon: '\u270F', effect: { interest: 1 } },
+            { age: 10, type: 'milestone', label: '5th Grade Grad!', desc: 'Elementary complete! Good choices matter!', color: '#FFD700', icon: '\u{1F389}', effect: { money: 25 } },
+
+            // === MIDDLE SCHOOL (Age 11-13) tiles 15-29 ===
+            { age: 11, type: 'milestone', label: 'Middle School!', desc: 'Things get real now. Your grades start to count!', color: '#FFD700', icon: '\u{1F3EB}' },
+            { age: 11, type: 'challenge', label: 'Algebra Quiz', desc: 'Solve the equation!', color: '#B3D9FF', icon: '\u{1F4D0}', subjects: ['Algebra', 'Math'] },
+            { age: 11, type: 'chance', label: 'Chance!', desc: 'Draw a card...', color: '#FFFFBA', icon: '\u2753' },
+            { age: 11, type: 'pathsplit', label: 'Join a Club?', desc: 'Extracurriculars build your future!', color: '#E8BAFF', icon: '\u{1F500}',
+                options: ['Band (+2 Interest)', 'Sports Team (+2 Balance)', 'Student Gov (+2 Commit)', 'Skip it all (-1 Commit)'],
+                effects: [{ interest: 2 }, { balance: 2 }, { commitment: 2 }, { commitment: -1 }],
+                minCommitment: [0, 0, 0, 0] },
+            { age: 12, type: 'challenge', label: 'English Test', desc: 'Spelling and grammar time!', color: '#B3D9FF', icon: '\u{1F4D5}', subjects: ['Spelling', 'English'] },
+            { age: 12, type: 'career', label: 'Career Aptitude', desc: 'Take an aptitude test. What are you good at?', color: '#FFD4A3', icon: '\u{1F4CB}', effect: { interest: 1 } },
+            { age: 12, type: 'chance', label: 'Chance!', desc: 'Draw a card...', color: '#FFFFBA', icon: '\u2753' },
+            { age: 12, type: 'challenge', label: 'Science Project', desc: 'Answer a science question!', color: '#B3D9FF', icon: '\u{1F9EA}', subjects: ['Science'] },
+            { age: 13, type: 'pathsplit', label: 'Study Habits?', desc: 'How seriously do you take school?', color: '#E8BAFF', icon: '\u{1F500}',
+                options: ['Study every night (+3 Commit)', 'Study sometimes (+1 Commit)', 'Never study (-2 Commit)'],
+                effects: [{ commitment: 3 }, { commitment: 1 }, { commitment: -2 }],
+                minCommitment: [0, 0, 0] },
+            { age: 13, type: 'chance', label: 'Chance!', desc: 'Draw a card...', color: '#FFFFBA', icon: '\u2753' },
+            { age: 13, type: 'challenge', label: 'History Test', desc: 'Test your knowledge!', color: '#B3D9FF', icon: '\u{1F4DC}', subjects: ['History', 'Civics'] },
+            { age: 13, type: 'career', label: 'Job Shadow Day', desc: 'See real professionals at work!', color: '#FFD4A3', icon: '\u{1F4BC}', effect: { interest: 1, commitment: 1 } },
+            { age: 13, type: 'pathsplit', label: 'Summer Plans?', desc: 'Summer is here. What will you do?', color: '#E8BAFF', icon: '\u{1F500}',
+                options: ['Academic Camp (+2 Commit, +$10)', 'Sports Camp (+2 Balance)', 'Volunteer (+1 each)', 'Sit around all summer (-1 Commit, -1 Interest)'],
+                effects: [{ commitment: 2, money: 10 }, { balance: 2 }, { balance: 1, commitment: 1, interest: 1 }, { commitment: -1, interest: -1 }],
+                minCommitment: [0, 0, 0, 0] },
+            { age: 13, type: 'reward', label: 'Class President!', desc: 'Elected! Shows leadership!', color: '#BAFFC9', icon: '\u{1F5F3}', effect: { money: 20, commitment: 1 } },
+            { age: 13, type: 'milestone', label: '8th Grade Grad!', desc: 'Middle school done! Your record follows you!', color: '#FFD700', icon: '\u{1F393}', effect: { money: 30 } },
+
+            // === HIGH SCHOOL (Age 14-18) tiles 30-49 ===
+            { age: 14, type: 'milestone', label: 'Freshman Year!', desc: 'High school! Every grade, every choice matters NOW.', color: '#FFD700', icon: '\u{1F3EB}' },
+            { age: 14, type: 'challenge', label: 'Algebra Final', desc: 'The real deal!', color: '#B3D9FF', icon: '\u{1F4CA}', subjects: ['Algebra', 'Math'] },
+            { age: 14, type: 'pathsplit', label: 'Course Track?', desc: 'Choose your academic path!', color: '#E8BAFF', icon: '\u{1F500}',
+                options: ['Honors/AP Classes (+3 Commit)', 'Regular Classes (+1 Commit)', 'Easy Classes (0)', 'Skip classes often (-3 Commit)'],
+                effects: [{ commitment: 3 }, { commitment: 1 }, {}, { commitment: -3 }],
+                minCommitment: [5, 0, 0, 0] },
+            { age: 14, type: 'chance', label: 'Chance!', desc: 'Draw a card...', color: '#FFFFBA', icon: '\u2753' },
+            { age: 15, type: 'career', label: 'Career Fair!', desc: 'Professionals show different paths. Pay attention!', color: '#FFD4A3', icon: '\u{1F4BC}', effect: { interest: 2 } },
+            { age: 15, type: 'challenge', label: 'Biology Exam', desc: 'Science gets serious!', color: '#B3D9FF', icon: '\u{1F9EC}', subjects: ['Science', 'Biology'] },
+            { age: 15, type: 'pathsplit', label: 'Part-Time Job?', desc: 'Should you get a job?', color: '#E8BAFF', icon: '\u{1F500}',
+                options: ['Work & Save (+$50, +1 Interest)', 'Focus on School (+2 Commit)', 'Hang out instead (-1 Commit)'],
+                effects: [{ money: 50, interest: 1 }, { commitment: 2 }, { commitment: -1 }],
+                minCommitment: [0, 0, 0] },
+            { age: 15, type: 'chance', label: 'Chance!', desc: 'Draw a card...', color: '#FFFFBA', icon: '\u2753' },
+            { age: 16, type: 'challenge', label: 'Chemistry Test', desc: 'Balance the equation!', color: '#B3D9FF', icon: '\u2697', subjects: ['Chemistry'] },
+            { age: 16, type: 'pathsplit', label: "Driver's Ed!", desc: 'Time to learn to drive!', color: '#E8BAFF', icon: '\u{1F500}',
+                options: ["Get License & Work (-$30, +$50/turn, +2 Bal)", 'Save Money (+$30)'],
+                effects: [{ money: 20, balance: 2 }, { money: 30 }],
+                minCommitment: [0, 0] },
+            { age: 16, type: 'career', label: 'Internship Offer!', desc: 'A local business offers experience!', color: '#FFD4A3', icon: '\u{1F3E2}',
+                conditional: true },
+            { age: 16, type: 'chance', label: 'Chance!', desc: 'Draw a card...', color: '#FFFFBA', icon: '\u2753' },
+            { age: 17, type: 'challenge', label: 'SAT/ACT Prep', desc: 'The BIG test!', color: '#B3D9FF', icon: '\u{1F4DD}' },
+            { age: 17, type: 'pathsplit', label: '\u26A1 LIFE PATH!', desc: 'THE big decision. Your future depends on this! (Options based on your past choices)', color: '#FF99CC', icon: '\u26A1',
+                dynamic: true },
+            { age: 17, type: 'chance', label: 'Chance!', desc: 'Draw a card...', color: '#FFFFBA', icon: '\u2753' },
+            { age: 17, type: 'challenge', label: 'AP/Final Exam', desc: 'Last big academic test!', color: '#B3D9FF', icon: '\u{1F3AF}' },
+            { age: 18, type: 'career', label: 'Senior Mentor', desc: 'A mentor gives life advice: "Start saving early!"', color: '#FFD4A3', icon: '\u{1F9D1}', effect: { commitment: 1, balance: 1 } },
+            { age: 18, type: 'reward', label: 'Prom Night!', desc: 'Making memories!', color: '#FFB3E6', icon: '\u{1F483}', effect: { balance: 2 } },
+            { age: 18, type: 'challenge', label: 'Final Exams!', desc: 'Your LAST tests!', color: '#B3D9FF', icon: '\u{1F4CB}' },
+            { age: 18, type: 'end', label: 'GRADUATION!', desc: 'You made it! Time to see where life takes you...', color: '#FFD700', icon: '\u{1F393}' },
+        ];
+    }
+
+    // ========== GRADE SECTION HELPERS ==========
+    function getGradeSection(position) {
+        if (position <= 14) return { name: 'Elementary School', label: 'ELEMENTARY (Age 7-10)', start: 0, end: 14, color: '#FFB3BA', bgTop: '#1a472a', bgBot: '#2d5016' };
+        if (position <= 29) return { name: 'Middle School', label: 'MIDDLE SCHOOL (Age 11-13)', start: 15, end: 29, color: '#BAE1FF', bgTop: '#1a2a47', bgBot: '#16302d' };
+        return { name: 'High School', label: 'HIGH SCHOOL (Age 14-18)', start: 30, end: 49, color: '#C9FFB3', bgTop: '#2a1a47', bgBot: '#301650' };
+    }
+
+    // ========== TILE LAYOUT (Serpentine path) ==========
+    function getTilePos(index, totalTiles) {
+        totalTiles = totalTiles || 50;
+        var perRow = 10;
+        var row = Math.floor(index / perRow);
+        var col = index % perRow;
+        var totalRows = Math.ceil(totalTiles / perRow);
+        var tileW = 82, tileH = 58, gapX = 6, gapY = 20;
+        var startX = 12;
+        var boardH = totalRows * (tileH + gapY);
+        var startY = 480 - (480 - boardH) / 2;
+        var y = startY - row * (tileH + gapY);
+        var x;
+        if (row % 2 === 0) {
+            x = startX + col * (tileW + gapX);
+        } else {
+            x = startX + (perRow - 1 - col) * (tileW + gapX);
+        }
+        return { x: x + tileW / 2, y: y + tileH / 2, w: tileW, h: tileH };
+    }
+
+    // ========== DRAWING ==========
+    function roundRect(ctx, x, y, w, h, r) {
+        ctx.beginPath();
+        ctx.moveTo(x + r, y);
+        ctx.lineTo(x + w - r, y);
+        ctx.quadraticCurveTo(x + w, y, x + w, y + r);
+        ctx.lineTo(x + w, y + h - r);
+        ctx.quadraticCurveTo(x + w, y + h, x + w - r, y + h);
+        ctx.lineTo(x + r, y + h);
+        ctx.quadraticCurveTo(x, y + h, x, y + h - r);
+        ctx.lineTo(x, y + r);
+        ctx.quadraticCurveTo(x, y, x + r, y);
+        ctx.closePath();
+    }
+
+    function drawBoard() {
+        var canvas = document.getElementById('board');
+        var ctx = canvas.getContext('2d');
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+        // Determine which grade section to show based on current player
+        var currentPos = players.length > 0 ? Math.min(Math.floor(players[currentPlayer].position), boardSpaces.length - 1) : 0;
+        var section = getGradeSection(currentPos);
+        var sectionTiles = section.end - section.start + 1;
+
+        var bgGrad = ctx.createLinearGradient(0, 0, 0, canvas.height);
+        bgGrad.addColorStop(0, section.bgTop);
+        bgGrad.addColorStop(1, section.bgBot);
+        ctx.fillStyle = bgGrad;
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+        // Section title banner
+        ctx.font = 'bold 18px Arial';
+        ctx.textAlign = 'center';
+        ctx.fillStyle = section.color;
+        ctx.globalAlpha = 0.7;
+        ctx.fillText(section.label, canvas.width / 2, 22);
+        ctx.globalAlpha = 1;
+
+        // Show other players' locations if they're in a different section
+        var otherInfo = [];
+        players.forEach(function(p, i) {
+            if (i === currentPlayer) return;
+            var pPos = Math.min(Math.floor(p.position), boardSpaces.length - 1);
+            var pSec = getGradeSection(pPos);
+            if (pSec.start !== section.start && !p.finished) {
+                otherInfo.push(p.character.name + ' is in ' + pSec.name);
+            }
+        });
+        if (otherInfo.length > 0) {
+            ctx.font = '11px Arial';
+            ctx.fillStyle = 'rgba(255,255,255,0.5)';
+            ctx.textAlign = 'right';
+            ctx.fillText(otherInfo.join(' | '), canvas.width - 10, 22);
+            ctx.textAlign = 'center';
+        }
+
+        // Path lines (within section only)
+        ctx.strokeStyle = 'rgba(255,255,255,0.3)';
+        ctx.lineWidth = 3;
+        ctx.setLineDash([6, 4]);
+        for (var i = 0; i < sectionTiles - 1; i++) {
+            var a = getTilePos(i, sectionTiles), b = getTilePos(i + 1, sectionTiles);
+            ctx.beginPath();
+            ctx.moveTo(a.x, a.y);
+            ctx.lineTo(b.x, b.y);
+            ctx.stroke();
+        }
+        ctx.setLineDash([]);
+
+        // Tiles (only current section, re-indexed from 0)
+        for (var i = 0; i < sectionTiles; i++) {
+            var absIdx = section.start + i;
+            var pos = getTilePos(i, sectionTiles);
+            var space = boardSpaces[absIdx];
+            var hasPlayer = players.some(function(p) { return Math.floor(p.position) === absIdx; });
+
+            ctx.fillStyle = 'rgba(0,0,0,0.25)';
+            roundRect(ctx, pos.x - pos.w/2 + 2, pos.y - pos.h/2 + 2, pos.w, pos.h, 6);
+            ctx.fill();
+
+            if (hasPlayer) { ctx.shadowColor = '#FFD700'; ctx.shadowBlur = 12; }
+            ctx.fillStyle = space.color;
+            roundRect(ctx, pos.x - pos.w/2, pos.y - pos.h/2, pos.w, pos.h, 6);
+            ctx.fill();
+            ctx.shadowColor = 'transparent'; ctx.shadowBlur = 0;
+
+            ctx.strokeStyle = hasPlayer ? '#FFD700' : 'rgba(0,0,0,0.2)';
+            ctx.lineWidth = hasPlayer ? 2 : 1;
+            roundRect(ctx, pos.x - pos.w/2, pos.y - pos.h/2, pos.w, pos.h, 6);
+            ctx.stroke();
+
+            ctx.font = '16px Arial';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText(space.icon || '', pos.x, pos.y - 10);
+
+            ctx.fillStyle = '#000';
+            ctx.font = 'bold 8px Arial';
+            ctx.fillText(space.label.substring(0, 14), pos.x, pos.y + 10);
+            ctx.fillStyle = 'rgba(0,0,0,0.35)';
+            ctx.font = '8px Arial';
+            ctx.fillText('Age ' + space.age, pos.x, pos.y + 20);
+        }
+
+        // Players (only those in current section)
+        players.forEach(function(player, i) {
+            var tileIdx = Math.min(Math.floor(player.position), boardSpaces.length - 1);
+            if (tileIdx < section.start || tileIdx > section.end) return;
+            var localIdx = tileIdx - section.start;
+            var pos = getTilePos(localIdx, sectionTiles);
+            var sameTile = players.filter(function(p, j) { return j < i && Math.floor(p.position) === tileIdx; }).length;
+            var offsetX = sameTile * 14 - 7;
+            drawCharacter(ctx, player.character, pos.x + offsetX, pos.y - 36);
+        });
+    }
+
+    function drawCharacter(ctx, char, x, y) {
+        ctx.save();
+        ctx.translate(x, y);
+        ctx.fillStyle = char.clothes;
+        ctx.fillRect(-4, -8, 8, 12);
+        ctx.fillStyle = char.color;
+        ctx.beginPath(); ctx.arc(0, -12, 4, 0, 2 * Math.PI); ctx.fill();
+        ctx.fillStyle = char.hair;
+        ctx.beginPath(); ctx.arc(0, -14, 4, Math.PI, 2 * Math.PI); ctx.fill();
+        ctx.fillStyle = '#333';
+        ctx.fillRect(-3, 4, 2, 5); ctx.fillRect(1, 4, 2, 5);
+        ctx.fillStyle = '#fff'; ctx.font = 'bold 7px Arial'; ctx.textAlign = 'center';
+        ctx.strokeStyle = '#000'; ctx.lineWidth = 2;
+        ctx.strokeText(char.name, 0, -20); ctx.fillText(char.name, 0, -20);
+        ctx.restore();
+    }
+
+    // ========== SPINNER (FIXED) ==========
+    // The wheel has numbers 1-10 drawn in fixed segments.
+    // The arrow rotates. When it stops, we read which segment the arrow tip points to.
+    // Segments are drawn starting at -90deg (12 o'clock), going clockwise.
+    // Segment i covers from angle (i * 36 - 90) to ((i+1)*36 - 90) degrees, label = i+1
+
+    function drawSpinner(arrowAngle) {
+        arrowAngle = arrowAngle || 0;
+        var canvas = document.getElementById('spinner');
+        var ctx = canvas.getContext('2d');
+        var cx = 75, cy = 75, r = 65;
+        ctx.clearRect(0, 0, 150, 150);
+
+        var segAngle = 2 * Math.PI / 10;
+        // Draw fixed segments
+        for (var i = 0; i < 10; i++) {
+            var startA = i * segAngle - Math.PI / 2;
+            var endA = (i + 1) * segAngle - Math.PI / 2;
+            ctx.beginPath();
+            ctx.moveTo(cx, cy);
+            ctx.arc(cx, cy, r, startA, endA);
+            ctx.closePath();
+            ctx.fillStyle = 'hsl(' + (i * 36) + ', 70%, ' + (i % 2 === 0 ? 65 : 78) + '%)';
+            ctx.fill();
+            ctx.strokeStyle = '#fff';
+            ctx.lineWidth = 1;
+            ctx.stroke();
+
+            // Number label at middle of segment
+            var midA = startA + segAngle / 2;
+            ctx.fillStyle = '#000';
+            ctx.font = 'bold 14px Arial';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText((i + 1).toString(), cx + 45 * Math.cos(midA), cy + 45 * Math.sin(midA));
+        }
+
+        // Center circle
+        ctx.beginPath();
+        ctx.arc(cx, cy, 10, 0, 2 * Math.PI);
+        ctx.fillStyle = '#555';
+        ctx.fill();
+
+        // Outer ring
+        ctx.beginPath();
+        ctx.arc(cx, cy, r, 0, 2 * Math.PI);
+        ctx.strokeStyle = '#333';
+        ctx.lineWidth = 3;
+        ctx.stroke();
+
+        // Rotating arrow
+        ctx.save();
+        ctx.translate(cx, cy);
+        ctx.rotate(arrowAngle);
+        // Arrow points UP (toward -Y which is 12 o'clock)
+        ctx.fillStyle = '#FF0000';
+        ctx.strokeStyle = '#800';
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.moveTo(0, -(r - 5));   // tip
+        ctx.lineTo(-6, -(r - 22));
+        ctx.lineTo(6, -(r - 22));
+        ctx.closePath();
+        ctx.fill();
+        ctx.stroke();
+        // shaft
+        ctx.beginPath();
+        ctx.moveTo(0, -(r - 22));
+        ctx.lineTo(0, 0);
+        ctx.strokeStyle = '#CC0000';
+        ctx.lineWidth = 3;
+        ctx.stroke();
+        ctx.restore();
+    }
+
+    function getSpinnerResult(arrowAngle) {
+        // Arrow tip at arrowAngle radians from 12 o'clock (before rotation, arrow points at -PI/2).
+        // After rotation by arrowAngle, tip is at angle = arrowAngle - PI/2 (from +X axis).
+        // Segments: segment i goes from (i*segAngle - PI/2) to ((i+1)*segAngle - PI/2)
+        // Normalize the tip angle to [0, 2*PI)
+        var segAngle = 2 * Math.PI / 10;
+        // The arrow WITHOUT rotation points at -PI/2 from center.
+        // Rotated by arrowAngle, it points at (arrowAngle - PI/2).
+        // But segments also start at -PI/2, so the arrow is in segment:
+        // tipAngle measured from the segment-start = arrowAngle
+        var norm = ((arrowAngle % (2 * Math.PI)) + 2 * Math.PI) % (2 * Math.PI);
+        var segIndex = Math.floor(norm / segAngle);
+        return segIndex + 1; // 1-10
+    }
+
+    function spinSpinner(callback) {
+        var btn = document.getElementById('spin-button');
+        btn.disabled = true;
+        var arrowAngle = 0;
+        var speed = Math.random() * 0.3 + 0.25;
+        var friction = 0.985;
+
+        var interval = setInterval(function() {
+            arrowAngle += speed;
+            speed *= friction;
+            drawSpinner(arrowAngle);
+
+            if (speed < 0.005) {
+                clearInterval(interval);
+                var result = getSpinnerResult(arrowAngle);
+                document.getElementById('spin-result').textContent = 'You spun: ' + result;
+                playSound('spin');
+                btn.disabled = false;
+                callback(result);
+            }
+        }, 30);
+    }
+
+    // ========== GAME LOGIC ==========
+    function getPlayerGPA(player) {
+        // "GPA" based on commitment — represents cumulative academic performance
+        return player.commitment;
+    }
+
+    function getPlayerTier(player) {
+        // Tier determines available life options
+        // excellent >= 8, good >= 4, average >= 1, struggling < 1
+        var gpa = getPlayerGPA(player);
+        if (gpa >= 10) return 'excellent';
+        if (gpa >= 5) return 'good';
+        if (gpa >= 2) return 'average';
+        return 'struggling';
+    }
+
+    function startGame(numPlayers, playerNames) {
+        var shuffled = characters.slice().sort(function() { return Math.random() - 0.5; });
+        players = [];
+        finishOrder = [];
+        totalTurns = 0;
+        usedQuestions = { elementary: [], middle: [], high: [] };
+        for (var i = 0; i < numPlayers; i++) {
+            var c = shuffled[i % shuffled.length];
+            players.push({
+                id: i,
+                position: 0,
+                money: 50,
+                commitment: 0,
+                interest: 0,
+                balance: 0,
+                goodChoices: 0,
+                badChoices: 0,
+                challengesPassed: 0,
+                challengesFailed: 0,
+                turnsUsed: 0,
+                finished: false,
+                character: Object.assign({}, c, { name: playerNames[i] })
+            });
+        }
+        currentPlayer = 0;
+        gameStarted = true;
+        updateUI();
+        drawBoard();
+        showMessage(players[0].character.name + "'s turn! Spin the wheel!");
+    }
+
+    function handleSpin(spinResult) {
+        if (!gameStarted && !waitingForAction) return;
+        if (isMoving) return;
+
+        if (waitingForAction) {
+            // This is a challenge grade spin — pass the current question for answer reveal
+            waitingForAction = false;
+            var q = players[currentPlayer]._currentQuestion || null;
+            handleChallengeGrade(spinResult, q);
+            return;
+        }
+
+        // Normal movement
+        var player = players[currentPlayer];
+        moveTarget = Math.min(player.position + spinResult, boardSpaces.length - 1);
+        isMoving = true;
+        animateMove();
+    }
+
+    function animateMove() {
+        var player = players[currentPlayer];
+        if (player.position < moveTarget) {
+            player.position = Math.min(player.position + 1, moveTarget);
+            if (player.position % 2 === 0) playSound('step');
+            drawBoard();
+            setTimeout(animateMove, 180);
+        } else {
+            player.position = Math.round(player.position);
+            isMoving = false;
+            handleLanding();
+        }
+    }
+
+    function handleLanding() {
+        var player = players[currentPlayer];
+        var space = boardSpaces[player.position];
+        document.getElementById('age-display').textContent = player.character.name + ' \u2014 Age ' + space.age + ' | GPA Score: ' + getPlayerGPA(player) + ' (' + getPlayerTier(player) + ')';
+
+        switch (space.type) {
+            case 'challenge':
+                showInteractiveChallenge(space);
+                break;
+            case 'chance':
+                drawChanceCard(space);
+                break;
+            case 'pathsplit':
+                if (space.dynamic) {
+                    showDynamicLifePath(space);
+                } else {
+                    showPathChoice(space);
+                }
+                break;
+            case 'career':
+                handleCareerTile(space);
+                break;
+            case 'reward':
+            case 'milestone':
+                if (space.effect) applyEffect(player, space.effect);
+                showEventCard(space, true);
+                endTurnAfterDelay();
+                break;
+            case 'end':
+                // Player graduated! But game continues for others.
+                showEventCard(space, true);
+                endTurnAfterDelay();
+                break;
+            default:
+                showEventCard(space, true);
+                endTurnAfterDelay();
+                break;
+        }
+        updateUI();
+    }
+
+    // -------- INTERACTIVE CHALLENGES --------
+    function showInteractiveChallenge(space) {
+        var player = players[currentPlayer];
+        var age = space.age;
+        var deck;
+        if (difficulty === 'easy') {
+            // Easy mode: always use elementary deck
+            deck = challengeQuestions.elementary;
+        } else {
+            if (age <= 10) deck = challengeQuestions.elementary;
+            else if (age <= 13) deck = challengeQuestions.middle;
+            else deck = challengeQuestions.high;
+        }
+
+        // Determine deck name for used-questions tracking
+        var deckName = difficulty === 'easy' ? 'elementary' : (age <= 10 ? 'elementary' : (age <= 13 ? 'middle' : 'high'));
+
+        // Filter by tile subject if specified
+        var filtered = deck;
+        if (space.subjects && space.subjects.length > 0) {
+            filtered = deck.filter(function(q) {
+                return space.subjects.indexOf(q.subject) !== -1;
+            });
+            if (filtered.length === 0) filtered = deck; // fallback
+        }
+
+        // Pick an unused question; reset if all have been seen
+        var available = filtered.filter(function(q) {
+            return usedQuestions[deckName].indexOf(q.q + '|' + q.a) === -1;
+        });
+        if (available.length === 0) {
+            usedQuestions[deckName] = [];
+            available = filtered;
+        }
+        var question = available[Math.floor(Math.random() * available.length)];
+        usedQuestions[deckName].push(question.q + '|' + question.a);
+        player._currentQuestion = question;
+
+        var isSpelling = !!question.spoken;
+        var questionDisplay = isSpelling
+            ? question.subject + ': ' + question.q + '<br><button id="hear-word" style="margin-top:6px;padding:6px 16px;background:#9C27B0;color:white;border:none;border-radius:6px;cursor:pointer;font-size:13px;">\uD83D\uDD0A Hear the Word Again</button>'
+            : question.subject + ': ' + question.q;
+
+        var cardDiv = document.getElementById('current-card');
+        var hintUsed = false;
+        cardDiv.innerHTML = '<div class="card-display neutral">' +
+            '<h3>' + space.icon + ' ' + space.label + '</h3>' +
+            '<p style="font-size:15px;margin:8px 0;">' + questionDisplay + '</p>' +
+            '<div style="margin:10px 0;">' +
+            '<input type="text" id="challenge-answer" placeholder="Type your answer..." style="padding:10px;border-radius:6px;border:1px solid #ccc;width:80%;font-size:16px;min-height:44px;" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false">' +
+            '<br><button id="submit-answer" style="margin-top:8px;padding:10px 24px;background:#4CAF50;color:white;border:none;border-radius:6px;cursor:pointer;font-size:15px;min-height:44px;">Submit Answer</button>' +
+            (question.hint ? ' <button id="hint-btn" style="margin-top:8px;padding:10px 18px;background:#9C27B0;color:white;border:none;border-radius:6px;cursor:pointer;font-size:14px;min-height:44px;">\u{1F4A1} Hint</button>' : '') +
+            '</div>' +
+            '<div id="hint-display" style="display:none;margin:8px 0;padding:8px 12px;background:rgba(156,39,176,0.2);border-radius:6px;font-size:13px;color:#fff;"></div>' +
+            '<p style="font-size:11px;color:rgba(255,255,255,0.8);">Or spin the wheel for a random grade instead!</p>' +
+            '<button id="spin-for-grade" style="padding:8px 16px;background:#FF9800;color:white;border:none;border-radius:6px;cursor:pointer;font-size:13px;min-height:44px;">Spin for Random Grade</button>' +
+            '<p style="font-size:10px;margin-top:8px;color:rgba(255,255,255,0.6);">Below 6 = FAIL (back 1) | 6-9 = PASS (stay) | 10 = ACE IT (forward 1 + bonus!)</p>' +
+            '</div>';
+        playSound('card');
+
+        // Speak the spelling word automatically and hook up replay button
+        if (isSpelling) {
+            setTimeout(function() { speakWord(question.spoken); }, 500);
+            var hearBtn = document.getElementById('hear-word');
+            if (hearBtn) hearBtn.onclick = function() { speakWord(question.spoken); };
+        }
+
+        // Hook up hint button
+        var hintBtn = document.getElementById('hint-btn');
+        if (hintBtn) {
+            hintBtn.onclick = function() {
+                playButtonSound();
+                hintUsed = true;
+                document.getElementById('hint-display').style.display = 'block';
+                document.getElementById('hint-display').textContent = '\u{1F4A1} Hint: ' + question.hint;
+                hintBtn.disabled = true;
+                hintBtn.style.opacity = '0.5';
+                // Disable spin-for-grade when hint is used
+                var spinBtn = document.getElementById('spin-for-grade');
+                spinBtn.disabled = true;
+                spinBtn.style.opacity = '0.4';
+                spinBtn.style.cursor = 'not-allowed';
+                spinBtn.title = 'You used a hint — no spinning allowed!';
+            };
+        }
+
+        // Hook up submit
+        document.getElementById('submit-answer').onclick = function() {
+            var input = document.getElementById('challenge-answer').value.trim().toLowerCase();
+            if (!input) return;
+            var correct = false;
+            // Accept if the answer contains the right answer or matches
+            var expected = question.a.toLowerCase();
+            if (input === expected || input.replace(/\s+/g, '') === expected.replace(/\s+/g, '')) {
+                correct = true;
+            }
+            if (correct) {
+                // Perfect score!
+                handleChallengeGrade(10, question);
+            } else {
+                // Wrong answer = fail
+                handleChallengeGrade(3, question);
+            }
+        };
+
+        // Allow Enter key
+        setTimeout(function() {
+            var inp = document.getElementById('challenge-answer');
+            if (inp) {
+                inp.focus();
+                inp.onkeydown = function(e) {
+                    if (e.key === 'Enter') document.getElementById('submit-answer').click();
+                };
+            }
+        }, 100);
+
+        // Hook up spin-for-grade
+        document.getElementById('spin-for-grade').onclick = function() {
+            if (hintUsed) return; // extra safety
+            waitingForAction = true;
+            showMessage(player.character.name + ': Spinning for a grade!');
+            spinSpinner(handleSpin);
+        };
+    }
+
+    function handleChallengeGrade(grade, question) {
+        var player = players[currentPlayer];
+        var space = boardSpaces[player.position];
+        var cardDiv = document.getElementById('current-card');
+
+        // Build the answer/explanation footer
+        var answerReveal = '';
+        if (question) {
+            var displayAnswer = question.spoken ? question.spoken : question.a;
+            answerReveal = '<div style="margin-top:10px;padding:10px;background:rgba(255,255,255,0.15);border-radius:8px;text-align:left;">' +
+                '<p style="font-size:13px;margin:0 0 4px 0;">\u{2705} <b>Correct answer:</b> ' + displayAnswer + '</p>';
+            if (question.explain) {
+                answerReveal += '<p style="font-size:12px;margin:0;opacity:0.9;">\u{1F4D6} ' + question.explain + '</p>';
+            }
+            answerReveal += '</div>';
+        }
+
+        if (grade < 6) {
+            player.challengesFailed++;
+            player.badChoices++;
+            cardDiv.innerHTML = '<div class="card-display bad">' +
+                '<h3>Grade: ' + grade + '/10 \u2014 FAIL!</h3>' +
+                '<p>You didn\'t pass the test!</p>' +
+                '<p>Go back 1 space. -1 Commitment.</p>' +
+                answerReveal +
+                '<p style="font-size:11px;margin-top:8px;opacity:0.8;">Remember: failing now makes things harder later!</p></div>';
+            playSound('bad');
+            player.commitment = Math.max(0, player.commitment - 1);
+            player.position = Math.max(0, player.position - 1);
+            drawBoard();
+        } else if (grade === 10) {
+            player.challengesPassed++;
+            player.goodChoices++;
+            cardDiv.innerHTML = '<div class="card-display good">' +
+                '<h3>Grade: 10/10 \u2014 PERFECT!</h3>' +
+                '<p>You ACED it!</p>' +
+                '<p>Move forward 1 space! +$15 bonus! +2 Commitment!</p>' +
+                answerReveal + '</div>';
+            playSound('good');
+            player.money += 15;
+            player.commitment += 2;
+            player.position = Math.min(boardSpaces.length - 1, player.position + 1);
+            drawBoard();
+        } else {
+            player.challengesPassed++;
+            cardDiv.innerHTML = '<div class="card-display neutral">' +
+                '<h3>Grade: ' + grade + '/10 \u2014 PASSED!</h3>' +
+                '<p>Not bad! You passed.</p>' +
+                '<p>Stay here. +1 Commitment.</p>' +
+                answerReveal + '</div>';
+            playSound('good');
+            player.commitment += 1;
+        }
+        updateUI();
+        endTurnAfterDelay();
+    }
+
+    // -------- CHANCE CARDS --------
+    function drawChanceCard(space) {
+        var player = players[currentPlayer];
+        var age = space.age;
+        var deck;
+        if (difficulty === 'easy') {
+            // Easy mode: always use elementary chance cards
+            deck = chanceCards.elementary;
+        } else {
+            if (age <= 10) deck = chanceCards.elementary;
+            else if (age <= 13) deck = chanceCards.middle;
+            else deck = chanceCards.high;
+        }
+
+        var card = deck[Math.floor(Math.random() * deck.length)];
+        applyEffect(player, card.effect);
+        if (card.good) player.goodChoices++; else player.badChoices++;
+
+        var cardDiv = document.getElementById('current-card');
+        cardDiv.innerHTML = '<div class="card-display ' + (card.good ? 'good' : 'bad') + '">' +
+            '<h3>' + (card.good ? '\u2705 Lucky!' : '\u274C Uh oh!') + '</h3>' +
+            '<p>' + card.text + '</p>' +
+            '<p style="margin-top:8px;font-size:11px;">' + effectText(card.effect) + '</p></div>';
+        playSound(card.good ? 'good' : 'bad');
+        updateUI();
+        endTurnAfterDelay();
+    }
+
+    // -------- PATH SPLIT (with restricted options for low performers) --------
+    function showPathChoice(space) {
+        var player = players[currentPlayer];
+        var tier = getPlayerTier(player);
+        var modal = document.getElementById('modal-overlay');
+        document.getElementById('modal-title').textContent = space.icon + ' ' + space.label;
+        var descText = space.desc;
+
+        var btns = document.getElementById('modal-buttons');
+        btns.innerHTML = '';
+        var availableCount = 0;
+
+        space.options.forEach(function(opt, i) {
+            var minReq = (space.minCommitment && space.minCommitment[i]) || 0;
+            var locked = player.commitment < minReq;
+            var btn = document.createElement('button');
+
+            if (locked) {
+                btn.textContent = '\u{1F512} ' + opt + ' (Requires ' + minReq + ' Commit)';
+                btn.style.background = '#999';
+                btn.style.cursor = 'not-allowed';
+                btn.disabled = true;
+            } else {
+                availableCount++;
+                btn.textContent = opt;
+                btn.onclick = function() {
+                    applyEffect(player, space.effects[i]);
+                    // Track good/bad
+                    var eff = space.effects[i];
+                    var isNeg = (eff.commitment && eff.commitment < 0) || (eff.interest && eff.interest < 0);
+                    if (isNeg) player.badChoices++; else player.goodChoices++;
+
+                    modal.classList.remove('active');
+                    var cardDiv = document.getElementById('current-card');
+                    cardDiv.innerHTML = '<div class="card-display good">' +
+                        '<h3>Choice Made!</h3>' +
+                        '<p>You chose: ' + opt + '</p>' +
+                        '<p style="font-size:11px;">' + effectText(space.effects[i]) + '</p></div>';
+                    playSound('choice');
+                    updateUI();
+                    endTurnAfterDelay();
+                };
+            }
+            btns.appendChild(btn);
+        });
+
+        document.getElementById('modal-desc').textContent = descText;
+        modal.classList.add('active');
+        playSound('card');
+    }
+
+    // -------- DYNAMIC LIFE PATH (options based on past performance) --------
+    function showDynamicLifePath(space) {
+        var player = players[currentPlayer];
+        var tier = getPlayerTier(player);
+        var modal = document.getElementById('modal-overlay');
+        document.getElementById('modal-title').textContent = '\u26A1 YOUR FUTURE PATH \u26A1';
+
+        var options = [];
+        var effects = [];
+
+        // EXCELLENT tier: all doors open
+        if (tier === 'excellent') {
+            document.getElementById('modal-desc').textContent = 'Your hard work has paid off! All doors are open to you!';
+            options = [
+                '\u{1F393} Full-Ride Scholarship to University (+5 Commit, +$100)',
+                '\u{1F52C} Elite STEM Program (+4 Interest, +2 Commit)',
+                '\u{1F3D7} Prestigious Trade Apprenticeship (+4 Interest, +$80)',
+                '\u{1F4BC} Start a Business (+3 Interest, +$60)'
+            ];
+            effects = [
+                { commitment: 5, money: 100 },
+                { interest: 4, commitment: 2 },
+                { interest: 4, money: 80 },
+                { interest: 3, money: 60 }
+            ];
+        } else if (tier === 'good') {
+            document.getElementById('modal-desc').textContent = 'You did well! You have solid options.';
+            options = [
+                '\u{1F393} State College (+3 Commit, +$30)',
+                '\u{1F527} Trade School (+3 Interest, +$40)',
+                '\u{1F4BC} Entry-Level Career (+$60, +1 Balance)',
+                '\u{1F3D6} Take a Gap Year (+2 Balance, -1 Commit)'
+            ];
+            effects = [
+                { commitment: 3, money: 30 },
+                { interest: 3, money: 40 },
+                { money: 60, balance: 1 },
+                { balance: 2, commitment: -1 }
+            ];
+        } else if (tier === 'average') {
+            document.getElementById('modal-desc').textContent = 'Your options are limited. You should have tried harder...';
+            options = [
+                '\u{1F3EB} Community College (+1 Commit, +$10)',
+                '\u{1F354} Fast Food Job (+$30)',
+                '\u{1F6E0} Manual Labor Job (+$25, +1 Balance)'
+            ];
+            effects = [
+                { commitment: 1, money: 10 },
+                { money: 30 },
+                { money: 25, balance: 1 }
+            ];
+        } else {
+            // STRUGGLING
+            document.getElementById('modal-desc').textContent = 'Your poor choices have caught up with you. Very few doors are open...';
+            options = [
+                '\u{1F354} Minimum Wage Job (+$15)',
+                '\u{1F3E0} Move Back in with Parents (+1 Balance, -$10)'
+            ];
+            effects = [
+                { money: 15 },
+                { balance: 1, money: -10 }
+            ];
+        }
+
+        var btns = document.getElementById('modal-buttons');
+        btns.innerHTML = '';
+
+        options.forEach(function(opt, i) {
+            var btn = document.createElement('button');
+            btn.textContent = opt;
+            btn.onclick = function() {
+                applyEffect(player, effects[i]);
+                player.goodChoices++;
+                modal.classList.remove('active');
+                document.getElementById('current-card').innerHTML = '<div class="card-display ' +
+                    (tier === 'excellent' || tier === 'good' ? 'good' : (tier === 'average' ? 'neutral' : 'bad')) + '">' +
+                    '<h3>Path Chosen!</h3><p>' + opt + '</p>' +
+                    '<p style="font-size:11px;">' + effectText(effects[i]) + '</p></div>';
+                playSound('choice');
+                updateUI();
+                endTurnAfterDelay();
+            };
+            btns.appendChild(btn);
+        });
+
+        modal.classList.add('active');
+        playSound('card');
+    }
+
+    // -------- CAREER TILES --------
+    function handleCareerTile(space) {
+        var player = players[currentPlayer];
+        if (space.effect) applyEffect(player, space.effect);
+
+        // Conditional career tile (internship — only if commitment >= 4)
+        if (space.conditional) {
+            if (player.commitment >= 4) {
+                player.goodChoices++;
+                player.money += 50;
+                player.interest += 2;
+                document.getElementById('current-card').innerHTML = '<div class="card-display good">' +
+                    '<h3>\u{1F3E2} Internship Accepted!</h3>' +
+                    '<p>Your good grades got you in! Real work experience!</p>' +
+                    '<p style="font-size:11px;">+$50, +2 Interest</p></div>';
+                playSound('good');
+            } else {
+                player.badChoices++;
+                document.getElementById('current-card').innerHTML = '<div class="card-display bad">' +
+                    '<h3>\u{1F3E2} Internship REJECTED</h3>' +
+                    '<p>Sorry, your grades aren\'t good enough. They picked another student.</p>' +
+                    '<p style="font-size:11px;opacity:0.8;">This is what happens when you don\'t work hard early!</p></div>';
+                playSound('bad');
+            }
+        } else {
+            document.getElementById('current-card').innerHTML = '<div class="card-display gold">' +
+                '<h3>' + (space.icon || '') + ' ' + space.label + '</h3>' +
+                '<p>' + space.desc + '</p>' +
+                (space.effect ? '<p style="font-size:11px;">' + effectText(space.effect) + '</p>' : '') + '</div>';
+            playSound('good');
+        }
+        updateUI();
+        endTurnAfterDelay();
+    }
+
+    // -------- HELPERS --------
+    function applyEffect(player, effect) {
+        if (!effect) return;
+        if (effect.money) player.money += effect.money;
+        if (effect.commitment) player.commitment += effect.commitment;
+        if (effect.interest) player.interest += effect.interest;
+        if (effect.balance) player.balance += effect.balance;
+        player.money = Math.max(0, player.money);
+        player.commitment = Math.max(0, player.commitment);
+        player.interest = Math.max(0, player.interest);
+        player.balance = Math.max(0, player.balance);
+    }
+
+    function effectText(effect) {
+        if (!effect) return '';
+        var parts = [];
+        if (effect.money) parts.push((effect.money > 0 ? '+' : '') + '$' + effect.money);
+        if (effect.commitment) parts.push((effect.commitment > 0 ? '+' : '') + effect.commitment + ' Commitment');
+        if (effect.interest) parts.push((effect.interest > 0 ? '+' : '') + effect.interest + ' Interest');
+        if (effect.balance) parts.push((effect.balance > 0 ? '+' : '') + effect.balance + ' Balance');
+        return parts.join(' | ');
+    }
+
+    function showEventCard(space, good) {
+        document.getElementById('current-card').innerHTML = '<div class="card-display ' +
+            (space.type === 'milestone' ? 'gold' : (good ? 'good' : 'neutral')) + '">' +
+            '<h3>' + (space.icon || '') + ' ' + space.label + '</h3>' +
+            '<p>' + space.desc + '</p>' +
+            (space.effect ? '<p style="font-size:11px;">' + effectText(space.effect) + '</p>' : '') + '</div>';
+        playSound(good ? 'good' : 'card');
+    }
+
+    function showMessage(msg) {
+        document.getElementById('spin-result').textContent = msg;
+    }
+
+    function endTurnAfterDelay() {
+        setTimeout(function() {
+            var player = players[currentPlayer];
+            totalTurns++;
+            player.turnsUsed++;
+
+            // Check if current player just graduated
+            if (player.position >= boardSpaces.length - 1 && !player.finished) {
+                player.finished = true;
+                finishOrder.push(player.id);
+                var place = finishOrder.length;
+                var suffix = place === 1 ? 'st' : place === 2 ? 'nd' : place === 3 ? 'rd' : 'th';
+                showMessage('\u{1F393} ' + player.character.name + ' graduated ' + place + suffix + '!');
+            }
+
+            // Check if all players finished
+            var allDone = players.every(function(p) { return p.finished; });
+            if (allDone) {
+                setTimeout(function() { endGame(); }, 1500);
+                return;
+            }
+
+            // Advance to next unfinished player
+            var attempts = 0;
+            do {
+                currentPlayer = (currentPlayer + 1) % players.length;
+                attempts++;
+            } while (players[currentPlayer].finished && attempts <= players.length);
+
+            if (attempts > players.length) { endGame(); return; }
+            updateUI();
+            showMessage(players[currentPlayer].character.name + "'s turn! Spin!");
+        }, 2500);
+    }
+
+    // ========== END GAME — RETIREMENT EXTRAPOLATION ==========
+    function endGame() {
+        gameStarted = false;
+
+        // === MULTIPLIER SYSTEM ===
+        // Base score = money + stats weighted
+        // Speed bonus: finishing earlier gives a higher position bonus (1st=best, last=least)
+        // BUT only if your goodRatio justifies it. Bad choices forfeit speed bonus.
+        // Multiplier formula:
+        //   speedFactor = (numPlayers - finishPlace) / numPlayers  -> 0.0 to ~1.0
+        //   choiceFactor = goodRatio (0.0 to 1.0)
+        //   challengeFactor = challengesPassed / max(1, passed+failed) (0.0 to 1.0)
+        //   multiplier = 1.0 + (speedFactor * 0.5 + choiceFactor * 0.4 + challengeFactor * 0.3) * clamp
+        //   Max possible multiplier = 2.2x (first finish + all good choices + all challenges aced)
+        //   Minimum = 1.0x (last place OR bad choices cancel speed bonus)
+
+        var results = players.map(function(p) {
+            var tier = getPlayerTier(p);
+            var baseScore = p.money + (p.commitment * 50) + (p.interest * 40) + (p.balance * 30);
+            var goodRatio = p.goodChoices / Math.max(1, p.goodChoices + p.badChoices);
+            var challengeRatio = p.challengesPassed / Math.max(1, p.challengesPassed + p.challengesFailed);
+
+            // Finish position (0-based index in finishOrder)
+            var finishPlace = finishOrder.indexOf(p.id); // 0 = first
+            if (finishPlace === -1) finishPlace = players.length - 1; // didn't finish somehow
+            var numPlayers = players.length;
+
+            // Speed factor: 1st gets full bonus, last gets 0
+            var speedFactor = numPlayers > 1 ? (numPlayers - 1 - finishPlace) / (numPlayers - 1) : 1;
+
+            // If bad choices outnumber good, forfeit speed bonus
+            var choiceFactor = goodRatio;
+            if (goodRatio < 0.4) speedFactor = 0; // too many bad choices = no speed bonus
+
+            var multiplier = 1.0 + (speedFactor * 0.5) + (choiceFactor * 0.4) + (challengeRatio * 0.3);
+            multiplier = Math.round(multiplier * 100) / 100; // round to 2 decimal
+
+            var finalScore = Math.round(baseScore * multiplier);
+
+            var outcome = {};
+            outcome.name = p.character.name;
+            outcome.baseScore = baseScore;
+            outcome.multiplier = multiplier;
+            outcome.score = finalScore;
+            outcome.tier = tier;
+            outcome.finishPlace = finishPlace + 1;
+            outcome.goodRatio = goodRatio;
+            outcome.challengeRatio = challengeRatio;
+            outcome.speedFactor = speedFactor;
+            outcome.turnsUsed = p.turnsUsed;
+
+            if (tier === 'excellent' && goodRatio >= 0.6) {
+                // Great choices = great life
+                var r = Math.random();
+                if (r < 0.5) {
+                    outcome.career = 'Doctor / Engineer / Executive';
+                    outcome.salary = '$150,000 - $300,000/year';
+                    outcome.retirement = 'Retired at 55 with $3.2 million in savings';
+                    outcome.family = 'Married with 2 kids, owns a home';
+                    outcome.lifestyle = 'Travels the world, volunteers, grandkids visit every weekend';
+                    outcome.emoji = '\u{1F3E0}\u{1F4B0}\u2708\uFE0F\u{1F468}\u200D\u{1F469}\u200D\u{1F467}\u200D\u{1F466}';
+                } else {
+                    outcome.career = 'Business Owner / Tech Entrepreneur';
+                    outcome.salary = '$200,000 - $500,000/year';
+                    outcome.retirement = 'Retired at 50, sold company for millions';
+                    outcome.family = 'Married, financially secure family';
+                    outcome.lifestyle = 'Owns multiple properties, donates to charity';
+                    outcome.emoji = '\u{1F4BC}\u{1F4B5}\u{1F3E1}\u2764\uFE0F';
+                }
+                outcome.color = 'good';
+            } else if (tier === 'good' && goodRatio >= 0.5) {
+                outcome.career = 'Teacher / Nurse / Skilled Professional';
+                outcome.salary = '$55,000 - $85,000/year';
+                outcome.retirement = 'Retired at 62 with $800K in savings and a pension';
+                outcome.family = 'Happy family, owns a modest home';
+                outcome.lifestyle = 'Comfortable retirement, enjoys hobbies, close friends';
+                outcome.emoji = '\u{1F3EB}\u{1F3E0}\u{1F60A}';
+                outcome.color = 'good';
+            } else if (tier === 'good') {
+                outcome.career = 'Office Worker / Sales Associate';
+                outcome.salary = '$40,000 - $55,000/year';
+                outcome.retirement = 'Retired at 65 with $400K in savings';
+                outcome.family = 'Small family, renting an apartment';
+                outcome.lifestyle = 'Gets by, wishes they saved more earlier';
+                outcome.emoji = '\u{1F3E2}\u{1F914}';
+                outcome.color = 'neutral';
+            } else if (tier === 'average') {
+                var r2 = Math.random();
+                if (r2 < 0.5) {
+                    outcome.career = 'Retail / Food Service Manager';
+                    outcome.salary = '$28,000 - $38,000/year';
+                    outcome.retirement = 'Still working at 67, small savings';
+                    outcome.family = 'Living paycheck to paycheck';
+                    outcome.lifestyle = 'Wishes they had paid more attention in school';
+                    outcome.emoji = '\u{1F354}\u{1F614}';
+                } else {
+                    outcome.career = 'Warehouse / Delivery Worker';
+                    outcome.salary = '$25,000 - $35,000/year';
+                    outcome.retirement = 'Can\'t afford to retire until 70+';
+                    outcome.family = 'Struggling to make ends meet';
+                    outcome.lifestyle = 'Body is tired, regrets not studying harder';
+                    outcome.emoji = '\u{1F4E6}\u{1F62A}';
+                }
+                outcome.color = 'bad';
+            } else {
+                // Struggling
+                var r3 = Math.random();
+                if (r3 < 0.4) {
+                    outcome.career = 'Minimum Wage / Odd Jobs';
+                    outcome.salary = '$15,000 - $22,000/year';
+                    outcome.retirement = 'No retirement savings. Working until you can\'t.';
+                    outcome.family = 'Alone, bouncing between apartments';
+                    outcome.lifestyle = 'Every day is a struggle. If only you had made better choices...';
+                    outcome.emoji = '\u{1F614}\u{1F4B8}';
+                } else if (r3 < 0.7) {
+                    outcome.career = 'Unemployed / Gig Worker';
+                    outcome.salary = '$10,000 - $18,000/year';
+                    outcome.retirement = 'Dependent on government assistance';
+                    outcome.family = 'No stable relationships';
+                    outcome.lifestyle = 'Couch surfing, no stable home. Choices have consequences.';
+                    outcome.emoji = '\u{1F61E}\u{1F3DA}';
+                } else {
+                    outcome.career = 'Between jobs';
+                    outcome.salary = 'Inconsistent income';
+                    outcome.retirement = 'Homeless shelter, no savings at all';
+                    outcome.family = 'Lost touch with family';
+                    outcome.lifestyle = 'Rock bottom. This is what happens when you give up on yourself.';
+                    outcome.emoji = '\u{1F494}\u{1F62D}';
+                }
+                outcome.color = 'bad';
+            }
+
+            return outcome;
+        });
+
+        // Sort by score
+        results.sort(function(a, b) { return b.score - a.score; });
+
+        var html = '<div style="max-height:400px;overflow-y:auto;">';
+        html += '<div class="card-display gold" style="margin-bottom:12px;"><h3>\u{1F393} GRADUATION DAY \u{1F393}</h3>';
+        html += '<p>Your choices shaped your future. Here\'s where life takes each of you...</p></div>';
+
+        results.forEach(function(o, i) {
+            var placeEmoji = o.finishPlace === 1 ? '\u{1F947}' : o.finishPlace === 2 ? '\u{1F948}' : o.finishPlace === 3 ? '\u{1F949}' : '\u{1F3C5}';
+            html += '<div class="card-display ' + o.color + '" style="margin-bottom:10px;text-align:left;">';
+            html += '<h3>' + (i === 0 ? '\u{1F3C6} WINNER: ' : (i + 1) + '. ') + o.name + ' ' + o.emoji + '</h3>';
+            html += '<p><b>Career:</b> ' + o.career + '</p>';
+            html += '<p><b>Salary:</b> ' + o.salary + '</p>';
+            html += '<p><b>At Retirement:</b> ' + o.retirement + '</p>';
+            html += '<p><b>Family:</b> ' + o.family + '</p>';
+            html += '<p><b>Life at 65:</b> ' + o.lifestyle + '</p>';
+            html += '<div style="background:rgba(0,0,0,0.15);border-radius:6px;padding:6px 8px;margin-top:6px;font-size:11px;">';
+            html += placeEmoji + ' Graduated ' + o.finishPlace + getOrdinal(o.finishPlace) + ' (' + o.turnsUsed + ' turns)';
+            html += ' | Base: ' + o.baseScore + ' pts';
+            html += ' | <b>Multiplier: ' + o.multiplier + 'x</b>';
+            html += (o.speedFactor > 0 ? ' \u{1F525}' : ' \u274C no speed bonus');
+            html += '<br><b>FINAL SCORE: ' + o.score + ' pts</b>';
+            html += '</div>';
+            html += '</div>';
+        });
+
+        html += '<div style="text-align:center;margin-top:12px;font-weight:bold;font-size:14px;color:#333;">' +
+            'The lesson: Every choice matters. Study hard, be kind, work at it \u2014 and your future self will thank you!</div>';
+        html += '<div style="text-align:center;margin-top:6px;font-size:11px;color:#666;">Multiplier: Speed (' + (players.length > 1 ? 'up to +0.5x' : 'N/A solo') + ') + Choices (up to +0.4x) + Challenges (up to +0.3x). Bad choices forfeit speed bonus!</div>';
+        html += '<div style="text-align:center;margin-top:14px;"><button id="restart-btn" style="padding:12px 30px;font-size:16px;background:#4CAF50;color:white;border:none;border-radius:8px;cursor:pointer;font-weight:bold;">\u{1F504} Play Again!</button></div>';
+        html += '</div>';
+
+        document.getElementById('current-card').innerHTML = html;
+        playSound('good');
+        stopMusic();
+        showMessage('\u{1F393} Game Over! ' + results[0].name + ' wins with ' + results[0].score + ' pts! (' + results[0].multiplier + 'x multiplier)');
+
+        // Hook restart button
+        document.getElementById('restart-btn').addEventListener('click', function() {
+            playButtonSound();
+            document.getElementById('setup').style.display = '';
+            document.getElementById('name-inputs').style.display = 'none';
+            document.getElementById('current-card').innerHTML = '';
+            document.getElementById('stats').innerHTML = '';
+            document.getElementById('age-display').textContent = '';
+            document.getElementById('spin-result').textContent = '';
+            players = [];
+            currentPlayer = 0;
+            finishOrder = [];
+            totalTurns = 0;
+            gameStarted = false;
+            difficulty = 'hard';
+            document.getElementById('difficulty-select').value = 'hard';
+            initBoard();
+            drawBoard();
+            drawSpinner();
+        });
+    }
+
+    function getOrdinal(n) {
+        if (n === 1) return 'st';
+        if (n === 2) return 'nd';
+        if (n === 3) return 'rd';
+        return 'th';
+    }
+
+    // ========== UI ==========
+    function updateUI() {
+        var statsDiv = document.getElementById('stats');
+        statsDiv.innerHTML = players.map(function(p, i) {
+            var cur = i === currentPlayer && gameStarted;
+            var age = boardSpaces[Math.min(p.position, boardSpaces.length - 1)].age || '?';
+            var tier = getPlayerTier(p);
+            var tierColor = tier === 'excellent' ? '#4CAF50' : tier === 'good' ? '#2196F3' : tier === 'average' ? '#FF9800' : '#f44336';
+            var finishedTag = p.finished ? ' \u{1F393} GRADUATED' : '';
+            return '<div class="player-stat ' + (cur ? 'current' : '') + '" style="background-color:' + p.character.clothes + '22; border-left:4px solid ' + p.character.clothes + (p.finished ? ';opacity:0.7' : '') + '">' +
+                '<div>' + (cur ? '\u25B6 ' : '') + p.character.name + finishedTag + '</div>' +
+                '<div style="font-size:10px;">$' + p.money + ' | Commit:' + p.commitment + ' | Int:' + p.interest + ' | Bal:' + p.balance + '</div>' +
+                '<div style="font-size:9px;">GPA: <span style="color:' + tierColor + ';font-weight:bold;">' + tier.toUpperCase() + '</span> | Age ' + age + '</div></div>';
+        }).join('');
+        drawBoard();
+    }
+
+    // ========== EVENT LISTENERS ==========
+    document.getElementById('spin-button').addEventListener('click', function() {
+        if ((!gameStarted && !waitingForAction) || isMoving) return;
+        playButtonSound();
+        spinSpinner(handleSpin);
+    });
+
+    document.getElementById('toggle-mode').addEventListener('click', function() {
+        playButtonSound();
+        darkMode = !darkMode;
+        document.body.classList.toggle('dark', darkMode);
+    });
+
+    document.getElementById('mute-btn').addEventListener('click', function() {
+        playButtonSound();
+        if (musicPlaying) {
+            toggleMusicMute();
+            this.textContent = musicMuted ? '\u{1F507} Music' : '\u{1F50A} Music';
+        }
+    });
+
+    document.getElementById('rules-btn').addEventListener('click', function() {
+        playButtonSound();
+        var r = document.getElementById('rules-box');
+        r.style.display = r.style.display === 'none' || !r.style.display ? 'block' : 'none';
+    });
+
+    document.getElementById('save-game').addEventListener('click', function() {
+        playButtonSound();
+        localStorage.setItem('careerPathSave', JSON.stringify({ players: players, currentPlayer: currentPlayer, gameStarted: gameStarted, finishOrder: finishOrder, totalTurns: totalTurns }));
+        showMessage('Game saved!');
+    });
+
+    document.getElementById('load-game').addEventListener('click', function() {
+        playButtonSound();
+        var saved = localStorage.getItem('careerPathSave');
+        if (saved) {
+            var state = JSON.parse(saved);
+            players = state.players;
+            currentPlayer = state.currentPlayer;
+            gameStarted = state.gameStarted;
+            finishOrder = state.finishOrder || [];
+            totalTurns = state.totalTurns || 0;
+            updateUI();
+            if (gameStarted) startMusic();
+            showMessage('Game loaded! ' + players[currentPlayer].character.name + "'s turn!");
+        }
+    });
+
+    document.getElementById('start-setup').addEventListener('click', function() {
+        playButtonSound();
+        var n = parseInt(document.getElementById('player-select').value);
+        var fields = document.getElementById('name-fields');
+        fields.innerHTML = '';
+        for (var i = 0; i < n; i++) {
+            fields.innerHTML += '<input type="text" id="name-' + i + '" placeholder="Player ' + (i+1) + ' Name" value="Player ' + (i+1) + '"><br>';
+        }
+        document.getElementById('name-inputs').style.display = 'block';
+    });
+
+    document.getElementById('begin-game').addEventListener('click', function() {
+        playButtonSound();
+        var n = parseInt(document.getElementById('player-select').value);
+        difficulty = document.getElementById('difficulty-select').value;
+        var names = [];
+        for (var i = 0; i < n; i++) {
+            names.push(document.getElementById('name-' + i).value || ('Player ' + (i + 1)));
+        }
+        document.getElementById('setup').style.display = 'none';
+        startGame(n, names);
+        startMusic();
+    });
+
+    // ========== INIT ==========
+    initBoard();
+    drawBoard();
+    drawSpinner();
+
+    // Touch support: tap spinner canvas to spin
+    document.getElementById('spinner').addEventListener('touchend', function(e) {
+        e.preventDefault();
+        var btn = document.getElementById('spin-button');
+        if (!btn.disabled) btn.click();
+    }, { passive: false });
+
+    // Prevent iOS bounce/zoom on game area
+    document.addEventListener('gesturestart', function(e) { e.preventDefault(); });
+    </script>
+</body>
+</html>
