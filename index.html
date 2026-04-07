@@ -889,34 +889,56 @@
         musicGain = audioContext.createGain();
         musicGain.gain.setValueAtTime(1.0, audioContext.currentTime);
         musicGain.connect(audioContext.destination);
+        // === ELEMENTARY: C major, "Happy Go Lucky" ===
+        // Bright & simple — triangle oscillator, slow bouncy tempo
+        // Key: C major   C4=262 D4=294 E4=330 G4=392 A4=440 C5=523
         var melodies = {
             elementary: [
-                [392,1],[440,1],[494,1],[523,2],[494,1],[440,1],[392,1],
-                [349,1],[330,1],[294,1],[330,2],[349,1],[392,1],[440,1],
-                [494,1],[523,1],[587,1],[523,2],[494,1],[440,1],[392,1],
-                [440,2],[392,1],[349,2],[330,1],[294,2],[330,1],[349,2],
+                [262,2],[294,1],[330,1],[392,2],[330,1],[294,1],
+                [262,4],[330,1],[392,1],[440,1],[523,2],
+                [440,1],[392,1],[330,2],[294,1],[262,4],
+                [392,2],[440,1],[523,1],[440,2],[392,1],
+                [330,2],[294,1],[330,1],[262,4],
+                [523,2],[440,2],[392,2],[330,2],[262,4],
             ],
+
+            // === MIDDLE: D minor rock riff, "Picking Up The Pace" ===
+            // Syncopated descending-then-rising riff — square oscillator, tighter tempo
+            // Key: D minor   D4=294 F4=349 G4=392 A4=440 C5=523 D5=587
             middle: [
-                [440,1],[494,1],[523,1],[494,1],[440,2],[415,1],[440,1],
-                [392,1],[415,1],[440,2],[392,1],[349,1],[330,1],[349,2],
-                [392,1],[440,1],[494,1],[523,1],[494,2],[440,1],[415,1],
-                [440,2],[392,2],[349,2],[330,2],[349,1],[392,2],
+                [587,1],[523,1],[440,1],[392,1],[349,2],[440,1],[392,2],
+                [587,2],[523,1],[494,1],[440,2],[392,2],
+                [440,1],[494,1],[523,1],[587,1],[523,2],[440,1],[392,2],
+                [349,1],[392,1],[440,1],[392,1],[349,2],[294,4],
+                [392,2],[440,2],[523,2],[440,2],[392,4],
+                [587,1],[523,1],[494,1],[440,1],[392,2],[349,1],[294,4],
             ],
+
+            // === HIGH SCHOOL: A minor sprint, "Race to the Finish" ===
+            // Fast arpeggios, chromatic tension — sawtooth oscillator, driving tempo
+            // Key: A minor   A4=440 C5=523 E5=659 G5=784 B4=494 D5=587
             high: [
-                [587,1],[659,1],[698,1],[659,2],[587,1],[554,1],[523,1],
-                [494,1],[523,1],[554,2],[587,1],[659,1],[698,1],[740,2],
-                [698,1],[659,1],[587,1],[554,2],[523,1],[494,1],[440,2],
-                [494,1],[523,1],[554,1],[587,2],[554,1],[523,1],[494,2],
+                [440,1],[523,1],[659,1],[523,1],[440,2],[494,1],[523,1],
+                [587,1],[659,1],[784,1],[659,1],[587,2],[523,1],[494,1],
+                [440,2],[494,2],[523,2],[659,2],[784,4],
+                [659,1],[587,1],[523,1],[494,1],[440,2],[392,1],[440,1],
+                [494,1],[523,1],[587,1],[659,1],[784,2],[659,2],
+                [523,2],[494,2],[440,4],
             ]
         };
         var bassLines = {
-            elementary: [[196,4],[175,4],[165,4],[147,4],[196,4],[175,4],[165,4],[147,4]],
-            middle:     [[220,4],[196,4],[175,4],[165,4],[220,4],[196,4],[175,4],[196,4]],
-            high:       [[293,4],[261,4],[246,4],[261,4],[293,4],[311,4],[293,4],[261,4]]
+            elementary: [[131,4],[196,4],[131,4],[175,4],[131,4],[196,4],[175,4],[131,8]],
+            middle:     [[147,3],[196,3],[220,3],[196,3],[147,3],[175,3],[196,3],[147,6]],
+            high:       [[110,2],[165,2],[220,2],[165,2],[110,2],[196,2],[220,2],[110,4]]
         };
-        var melody   = melodies[sectionKey]   || melodies.elementary;
-        var bassLine = bassLines[sectionKey]  || bassLines.elementary;
-        var tempo = sectionKey === 'high' ? 0.155 : sectionKey === 'middle' ? 0.168 : 0.18;
+        // Oscillator types: elementary=triangle(soft), middle=square(edgy), high=sawtooth(cutting)
+        var oscTypes = { elementary: 'triangle', middle: 'square', high: 'sawtooth' };
+        var bassOscTypes = { elementary: 'sine', middle: 'triangle', high: 'square' };
+        var melody      = melodies[sectionKey]    || melodies.elementary;
+        var bassLine    = bassLines[sectionKey]   || bassLines.elementary;
+        var oscType     = oscTypes[sectionKey]    || 'triangle';
+        var bassOscType = bassOscTypes[sectionKey]|| 'sine';
+        var tempo = sectionKey === 'high' ? 0.115 : sectionKey === 'middle' ? 0.148 : 0.205;
         var noteIdx = 0, bassIdx = 0;
         var melodyTime = audioContext.currentTime + 0.1;
         var bassTime   = audioContext.currentTime + 0.1;
@@ -929,10 +951,10 @@
                 try {
                     var osc = audioContext.createOscillator();
                     var g = audioContext.createGain();
-                    osc.type = 'triangle';
+                    osc.type = oscType;
                     osc.frequency.setValueAtTime(note[0], melodyTime);
-                    g.gain.setValueAtTime(0.04, melodyTime);
-                    g.gain.exponentialRampToValueAtTime(0.001, melodyTime + dur * 0.95);
+                    g.gain.setValueAtTime(0.038, melodyTime);
+                    g.gain.exponentialRampToValueAtTime(0.001, melodyTime + dur * 0.93);
                     osc.connect(g); g.connect(musicGain);
                     osc.start(melodyTime); osc.stop(melodyTime + dur);
                 } catch(e) {}
@@ -944,10 +966,10 @@
                 try {
                     var osc2 = audioContext.createOscillator();
                     var g2 = audioContext.createGain();
-                    osc2.type = 'sine';
+                    osc2.type = bassOscType;
                     osc2.frequency.setValueAtTime(bn[0], bassTime);
-                    g2.gain.setValueAtTime(0.025, bassTime);
-                    g2.gain.exponentialRampToValueAtTime(0.001, bassTime + bd * 0.9);
+                    g2.gain.setValueAtTime(0.022, bassTime);
+                    g2.gain.exponentialRampToValueAtTime(0.001, bassTime + bd * 0.88);
                     osc2.connect(g2); g2.connect(musicGain);
                     osc2.start(bassTime); osc2.stop(bassTime + bd);
                 } catch(e) {}
