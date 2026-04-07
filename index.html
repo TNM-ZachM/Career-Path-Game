@@ -3,20 +3,48 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>CAREER PATHWAYS: The Board Game of Life Choices</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700;800&display=swap" rel="stylesheet">
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        @keyframes gradientShift {
+            0%   { background-position: 0% 50%; }
+            50%  { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+        @keyframes cardPop {
+            from { transform: scale(0.85) translateY(8px); opacity: 0; }
+            to   { transform: scale(1) translateY(0); opacity: 1; }
+        }
+        @keyframes modalSlideIn {
+            from { transform: translateY(-28px) scale(0.95); opacity: 0; }
+            to   { transform: translateY(0) scale(1); opacity: 1; }
+        }
+        @keyframes titleGlow {
+            0%,100% { filter: drop-shadow(0 0 8px rgba(255,255,255,0.35)); }
+            50%     { filter: drop-shadow(0 0 22px rgba(255,255,255,0.8)); }
+        }
+
         body {
-            font-family: 'Segoe UI', Tahoma, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            font-family: 'Poppins', 'Segoe UI', Tahoma, sans-serif;
+            background: linear-gradient(-45deg, #667eea, #764ba2, #f093fb, #4facfe, #43e97b, #667eea);
+            background-size: 400% 400%;
+            animation: gradientShift 18s ease infinite;
             color: #333;
             min-height: 100vh;
         }
         body.dark {
-            background: linear-gradient(135deg, #1a1a2e, #16213e);
+            background: linear-gradient(-45deg, #1a1a2e, #16213e, #0f3460, #1a1a2e);
+            background-size: 400% 400%;
+            animation: gradientShift 18s ease infinite;
             color: #eee;
         }
-        body.dark .panel { background: rgba(40,40,60,0.95); color: #eee; }
-        body.dark #board-container { background: #1a1a2e; }
+        body.dark .panel {
+            background: rgba(20, 20, 45, 0.75);
+            border-color: rgba(255,255,255,0.08);
+            color: #eee;
+        }
+        body.dark #board-container { background: rgba(10,10,30,0.6); }
         #container {
             max-width: 920px;
             margin: 0 auto;
@@ -24,136 +52,205 @@
         }
         h1 {
             text-align: center;
-            color: #fff;
-            text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+            background: linear-gradient(135deg, #fff 0%, #ffe082 50%, #fff 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            animation: titleGlow 3s ease-in-out infinite;
             margin-bottom: 8px;
             font-size: 22px;
+            font-weight: 800;
+            letter-spacing: 0.5px;
         }
         #age-display {
             text-align: center;
             font-size: 14px;
-            color: #fff;
-            font-weight: bold;
+            color: rgba(255,255,255,0.92);
+            font-weight: 600;
             margin-bottom: 5px;
             min-height: 20px;
         }
         #board-container {
-            background: #fff;
-            border-radius: 12px;
+            background: rgba(255,255,255,0.15);
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+            border: 1px solid rgba(255,255,255,0.3);
+            border-radius: 14px;
             padding: 5px;
             box-shadow: 0 8px 32px rgba(0,0,0,0.3);
             margin-bottom: 10px;
         }
-        #board { display: block; width: 100%; border-radius: 8px; }
+        #board { display: block; width: 100%; border-radius: 10px; }
         #ui {
             display: flex;
             gap: 10px;
             margin-bottom: 10px;
         }
         .panel {
-            background: rgba(255,255,255,0.95);
-            border-radius: 10px;
+            background: rgba(255,255,255,0.18);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid rgba(255,255,255,0.35);
+            border-radius: 12px;
             padding: 12px;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+            box-shadow: 0 4px 20px rgba(0,0,0,0.2);
         }
         #sidebar { flex: 1; }
-        #sidebar h3 { margin-bottom: 8px; font-size: 14px; }
+        #sidebar h3 { margin-bottom: 8px; font-size: 14px; color: #fff; font-weight: 700; }
         .player-stat {
-            padding: 6px 8px;
-            margin: 4px 0;
-            border-radius: 6px;
+            padding: 7px 10px;
+            margin: 5px 0;
+            border-radius: 8px;
             font-size: 12px;
-            font-weight: bold;
+            font-weight: 600;
+            background: rgba(255,255,255,0.12);
         }
         .player-stat.current {
-            border: 2px solid #FFD700;
-            box-shadow: 0 0 8px rgba(255,215,0,0.5);
+            border: 2px solid #FFD700 !important;
+            box-shadow: 0 0 10px rgba(255,215,0,0.5);
+        }
+        .stat-name { font-weight: 700; font-size: 12px; margin-bottom: 3px; color: #fff; }
+        .stat-label { font-size: 9px; color: rgba(255,255,255,0.75); margin-bottom: 2px; }
+        .stat-bar-wrap {
+            background: rgba(0,0,0,0.25);
+            border-radius: 4px;
+            height: 6px;
+            margin-bottom: 3px;
+            overflow: hidden;
+        }
+        .stat-bar {
+            height: 6px;
+            border-radius: 4px;
+            transition: width 0.4s ease;
+            min-width: 4px;
         }
         #card-area { flex: 1.8; text-align: center; min-height: 180px; }
+        #card-area h3, #spinner-area h3 { color: #fff; font-weight: 700; margin-bottom: 8px; }
         #spinner-area { flex: 1; text-align: center; }
         #spinner { display: block; margin: 0 auto; }
         #spin-button {
             margin-top: 8px;
             padding: 10px 24px;
-            background: linear-gradient(45deg, #4CAF50, #45a049);
-            color: white;
+            background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
+            color: #0d3320;
             border: none;
             cursor: pointer;
             border-radius: 25px;
             font-size: 16px;
-            font-weight: bold;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.2);
-            transition: transform 0.2s;
+            font-weight: 800;
+            font-family: 'Poppins', sans-serif;
+            box-shadow: 0 4px 15px rgba(67,233,123,0.45);
+            transition: transform 0.2s, box-shadow 0.2s;
         }
-        #spin-button:hover { transform: scale(1.05); }
-        #spin-button:disabled { background: #999; cursor: not-allowed; transform: none; }
-        #spin-result { margin-top: 5px; font-weight: bold; font-size: 13px; color: #333; min-height: 40px; }
-        body.dark #spin-result { color: #eee; }
+        #spin-button:hover {
+            transform: translateY(-3px) scale(1.06);
+            box-shadow: 0 8px 25px rgba(67,233,123,0.65);
+        }
+        #spin-button:disabled {
+            background: rgba(130,130,130,0.45);
+            color: rgba(255,255,255,0.45);
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+        #spin-result { margin-top: 5px; font-weight: 600; font-size: 13px; color: rgba(255,255,255,0.92); min-height: 40px; }
         #setup {
-            background: rgba(255,255,255,0.95);
-            border-radius: 12px;
+            background: rgba(255,255,255,0.2);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid rgba(255,255,255,0.35);
+            border-radius: 14px;
             padding: 20px;
             margin-bottom: 15px;
             text-align: center;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+            box-shadow: 0 4px 20px rgba(0,0,0,0.2);
+            color: #fff;
         }
-        #setup select, #setup input, #setup button {
+        #setup h2 { font-weight: 800; margin-bottom: 6px; }
+        #setup p { font-size: 14px; margin-bottom: 12px; opacity: 0.9; }
+        #setup select, #setup input {
             margin: 5px;
             padding: 8px 12px;
-            border-radius: 6px;
-            border: 1px solid #ccc;
+            border-radius: 8px;
+            border: 1px solid rgba(255,255,255,0.4);
             font-size: 14px;
+            font-family: 'Poppins', sans-serif;
+            background: rgba(255,255,255,0.88);
+            color: #333;
         }
-        #setup button { background: #4CAF50; color: white; border: none; cursor: pointer; }
+        #setup button {
+            margin: 5px;
+            padding: 10px 24px;
+            border-radius: 25px;
+            border: none;
+            font-size: 15px;
+            font-weight: 700;
+            font-family: 'Poppins', sans-serif;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            cursor: pointer;
+            box-shadow: 0 4px 15px rgba(102,126,234,0.4);
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        #setup button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(102,126,234,0.6);
+        }
         /* Modal */
         #modal-overlay {
             display: none;
             position: fixed;
             top: 0; left: 0;
             width: 100%; height: 100%;
-            background: rgba(0,0,0,0.7);
+            background: rgba(0,0,0,0.6);
+            backdrop-filter: blur(4px);
+            -webkit-backdrop-filter: blur(4px);
             z-index: 1000;
             justify-content: center;
             align-items: center;
         }
         #modal-overlay.active { display: flex; }
         #modal {
-            background: #fff;
-            border-radius: 16px;
-            padding: 24px;
-            max-width: 450px;
+            background: rgba(255,255,255,0.97);
+            border-radius: 18px;
+            padding: 28px;
+            max-width: 460px;
             width: 90%;
             text-align: center;
-            box-shadow: 0 10px 40px rgba(0,0,0,0.4);
+            box-shadow: 0 20px 60px rgba(0,0,0,0.4);
+            animation: modalSlideIn 0.3s ease;
         }
-        #modal h2 { margin-bottom: 10px; font-size: 20px; }
-        #modal p { margin-bottom: 15px; font-size: 14px; color: #555; }
-        #modal-buttons { display: flex; flex-direction: column; gap: 8px; }
+        #modal h2 { margin-bottom: 10px; font-size: 20px; font-weight: 800; }
+        #modal p { margin-bottom: 18px; font-size: 14px; color: #555; line-height: 1.5; }
+        #modal-buttons { display: flex; flex-direction: column; gap: 10px; }
         #modal-buttons button {
-            padding: 12px;
+            padding: 13px;
             border: none;
-            border-radius: 8px;
+            border-radius: 10px;
             font-size: 14px;
-            font-weight: bold;
+            font-weight: 700;
+            font-family: 'Poppins', sans-serif;
             cursor: pointer;
             color: white;
-            background: linear-gradient(45deg, #667eea, #764ba2);
-            transition: transform 0.2s;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            transition: transform 0.2s, box-shadow 0.2s;
+            box-shadow: 0 4px 12px rgba(102,126,234,0.35);
         }
-        #modal-buttons button:hover { transform: scale(1.03); }
+        #modal-buttons button:hover { transform: translateY(-2px); box-shadow: 0 8px 20px rgba(102,126,234,0.55); }
+        #modal-buttons button:disabled { background: #ccc; color: #999; cursor: not-allowed; transform: none; box-shadow: none; }
         .card-display {
-            border-radius: 12px;
+            border-radius: 14px;
             padding: 16px;
-            font-weight: bold;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+            font-weight: 600;
+            box-shadow: 0 6px 20px rgba(0,0,0,0.2);
             animation: cardPop 0.3s ease;
+            border-left: 5px solid rgba(255,255,255,0.5);
         }
-        @keyframes cardPop { from { transform: scale(0.8); opacity: 0; } to { transform: scale(1); opacity: 1; } }
-        .card-display.good { background: linear-gradient(135deg, #4CAF50, #81C784); color: white; }
-        .card-display.bad { background: linear-gradient(135deg, #f44336, #e57373); color: white; }
-        .card-display.neutral { background: linear-gradient(135deg, #2196F3, #64B5F6); color: white; }
-        .card-display.gold { background: linear-gradient(135deg, #FFD700, #FFA500); color: #333; }
-        .card-display h3 { font-size: 16px; margin-bottom: 8px; }
+        .card-display.good  { background: linear-gradient(135deg, #0be881, #00b4d8); color: #fff; border-left-color: rgba(255,255,255,0.7); }
+        .card-display.bad   { background: linear-gradient(135deg, #f72585, #b5179e); color: #fff; border-left-color: rgba(255,200,230,0.7); }
+        .card-display.neutral { background: linear-gradient(135deg, #4361ee, #4cc9f0); color: #fff; border-left-color: rgba(180,220,255,0.7); }
+        .card-display.gold  { background: linear-gradient(135deg, #f77f00, #fcbf49); color: #fff; border-left-color: rgba(255,235,160,0.7); }
+        .card-display h3 { font-size: 16px; margin-bottom: 8px; font-weight: 700; }
         .card-display p { font-size: 13px; margin-bottom: 5px; }
         .toolbar {
             display: flex;
@@ -162,24 +259,36 @@
             margin-bottom: 10px;
         }
         .toolbar button {
-            padding: 6px 14px;
-            border: none;
-            border-radius: 6px;
+            padding: 7px 16px;
+            border: 1px solid rgba(255,255,255,0.4);
+            border-radius: 20px;
             cursor: pointer;
             font-size: 12px;
-            background: rgba(255,255,255,0.9);
-            box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+            font-weight: 600;
+            font-family: 'Poppins', sans-serif;
+            background: rgba(255,255,255,0.18);
+            backdrop-filter: blur(8px);
+            color: #fff;
+            transition: background 0.2s, transform 0.15s;
+        }
+        .toolbar button:hover {
+            background: rgba(255,255,255,0.32);
+            transform: translateY(-1px);
         }
         #rules-box {
             display: none;
-            background: rgba(255,255,255,0.95);
-            border-radius: 10px;
-            padding: 15px;
+            background: rgba(255,255,255,0.18);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid rgba(255,255,255,0.3);
+            border-radius: 12px;
+            padding: 16px;
             margin-top: 10px;
             font-size: 13px;
             line-height: 1.6;
+            color: #fff;
         }
-        body.dark #rules-box { background: rgba(40,40,60,0.95); color: #eee; }
+        body.dark #rules-box { background: rgba(15,20,45,0.75); color: #eee; }
         @media (max-width: 950px) {
             #ui { flex-direction: column; }
         }
@@ -1069,11 +1178,13 @@
             roundRect(ctx, pos.x - pos.w/2, pos.y - pos.h/2, pos.w, pos.h, 6);
             ctx.stroke();
 
-            ctx.font = '16px Arial';
+            ctx.shadowColor = 'rgba(255,255,255,0.8)';
+            ctx.shadowBlur = 6;
+            ctx.font = '20px Arial';
             ctx.textAlign = 'center';
             ctx.textBaseline = 'middle';
             ctx.fillText(space.icon || '', pos.x, pos.y - 10);
-
+            ctx.shadowColor = 'transparent'; ctx.shadowBlur = 0;
             ctx.fillStyle = '#000';
             ctx.font = 'bold 8px Arial';
             ctx.fillText(space.label.substring(0, 14), pos.x, pos.y + 10);
@@ -1097,17 +1208,36 @@
     function drawCharacter(ctx, char, x, y) {
         ctx.save();
         ctx.translate(x, y);
+        var isGirl = char.gender === 'girl';
+        // Torso / clothes
         ctx.fillStyle = char.clothes;
-        ctx.fillRect(-4, -8, 8, 12);
+        if (isGirl) {
+            ctx.fillRect(-4, -8, 8, 7);          // bodice
+            ctx.beginPath();                       // flared skirt
+            ctx.moveTo(-5, -1); ctx.lineTo(5, -1);
+            ctx.lineTo(9, 9); ctx.lineTo(-9, 9);
+            ctx.closePath(); ctx.fill();
+        } else {
+            ctx.fillRect(-4, -8, 8, 10);           // shirt
+            ctx.fillStyle = '#4a3420';
+            ctx.fillRect(-4, 2, 3, 7); ctx.fillRect(1, 2, 3, 7); // pants
+        }
+        // Head
         ctx.fillStyle = char.color;
         ctx.beginPath(); ctx.arc(0, -12, 4, 0, 2 * Math.PI); ctx.fill();
+        // Hair
         ctx.fillStyle = char.hair;
-        ctx.beginPath(); ctx.arc(0, -14, 4, Math.PI, 2 * Math.PI); ctx.fill();
-        ctx.fillStyle = '#333';
-        ctx.fillRect(-3, 4, 2, 5); ctx.fillRect(1, 4, 2, 5);
+        if (isGirl) {
+            ctx.beginPath(); ctx.arc(0, -14, 4.5, Math.PI, 2 * Math.PI); ctx.fill();
+            ctx.fillRect(-5, -17, 2, 7);   // left pigtail
+            ctx.fillRect(3, -17, 2, 7);    // right pigtail
+        } else {
+            ctx.beginPath(); ctx.arc(0, -14, 4, Math.PI, 2 * Math.PI); ctx.fill();
+        }
+        // Name label
         ctx.fillStyle = '#fff'; ctx.font = 'bold 7px Arial'; ctx.textAlign = 'center';
         ctx.strokeStyle = '#000'; ctx.lineWidth = 2;
-        ctx.strokeText(char.name, 0, -20); ctx.fillText(char.name, 0, -20);
+        ctx.strokeText(char.name, 0, -22); ctx.fillText(char.name, 0, -22);
         ctx.restore();
     }
 
@@ -1240,7 +1370,7 @@
         return 'struggling';
     }
 
-    function startGame(numPlayers, playerNames) {
+    function startGame(numPlayers, playerNames, playerGenders) {
         var shuffled = characters.slice().sort(function() { return Math.random() - 0.5; });
         players = [];
         finishOrder = [];
@@ -1261,7 +1391,7 @@
                 challengesFailed: 0,
                 turnsUsed: 0,
                 finished: false,
-                character: Object.assign({}, c, { name: playerNames[i] })
+                character: Object.assign({}, c, { name: playerNames[i], gender: playerGenders ? (playerGenders[i] || 'boy') : 'boy' })
             });
         }
         currentPlayer = 0;
@@ -2012,12 +2142,22 @@
             var cur = i === currentPlayer && gameStarted;
             var age = boardSpaces[Math.min(p.position, boardSpaces.length - 1)].age || '?';
             var tier = getPlayerTier(p);
-            var tierColor = tier === 'excellent' ? '#4CAF50' : tier === 'good' ? '#2196F3' : tier === 'average' ? '#FF9800' : '#f44336';
-            var finishedTag = p.finished ? ' \u{1F393} GRADUATED' : '';
-            return '<div class="player-stat ' + (cur ? 'current' : '') + '" style="background-color:' + p.character.clothes + '22; border-left:4px solid ' + p.character.clothes + (p.finished ? ';opacity:0.7' : '') + '">' +
-                '<div>' + (cur ? '\u25B6 ' : '') + p.character.name + finishedTag + '</div>' +
-                '<div style="font-size:10px;">$' + p.money + ' | Commit:' + p.commitment + ' | Int:' + p.interest + ' | Bal:' + p.balance + '</div>' +
-                '<div style="font-size:9px;">GPA: <span style="color:' + tierColor + ';font-weight:bold;">' + tier.toUpperCase() + '</span> | Age ' + age + '</div></div>';
+            var tierColor = tier === 'excellent' ? '#4ade80' : tier === 'good' ? '#60a5fa' : tier === 'average' ? '#fbbf24' : '#f87171';
+            var finishedTag = p.finished ? ' \u{1F393}' : '';
+            var moneyPct  = Math.min(100, Math.round(p.money / 2));
+            var commitPct = Math.min(100, Math.round(p.commitment * 10));
+            var interPct  = Math.min(100, Math.round(p.interest * 10));
+            var balPct    = Math.min(100, Math.max(0, Math.round((p.balance + 5) * 7)));
+            var clr = p.character.clothes;
+            return '<div class="player-stat ' + (cur ? 'current' : '') + '" style="background-color:' + clr + '28; border-left:4px solid ' + clr + (p.finished ? ';opacity:0.65' : '') + '">' +
+                '<div class="stat-name">' + (cur ? '\u25B6 ' : '') + p.character.name + finishedTag + ' &nbsp;<span style="font-size:9px;font-weight:400;opacity:0.8;">Age ' + age + ' &bull; GPA: <span style="color:' + tierColor + ';font-weight:700;">' + tier.toUpperCase() + '</span></span></div>' +
+                '<div class="stat-label">\uD83D\uDCB0 Money ($' + p.money + ')</div>' +
+                '<div class="stat-bar-wrap"><div class="stat-bar" style="width:' + moneyPct + '%;background:' + clr + ';"></div></div>' +
+                '<div class="stat-label">\uD83D\uDCDA Commitment (' + p.commitment + ')</div>' +
+                '<div class="stat-bar-wrap"><div class="stat-bar" style="width:' + commitPct + '%;background:' + clr + ';"></div></div>' +
+                '<div class="stat-label">\u2B50 Interest (' + p.interest + ') &bull; Balance (' + p.balance + ')</div>' +
+                '<div class="stat-bar-wrap"><div class="stat-bar" style="width:' + interPct + '%;background:' + clr + ';opacity:0.7;"></div></div>' +
+                '</div>';
         }).join('');
         drawBoard();
     }
@@ -2077,7 +2217,12 @@
         var fields = document.getElementById('name-fields');
         fields.innerHTML = '';
         for (var i = 0; i < n; i++) {
-            fields.innerHTML += '<input type="text" id="name-' + i + '" placeholder="Player ' + (i+1) + ' Name" value="Player ' + (i+1) + '"><br>';
+            fields.innerHTML += '<div style="display:inline-flex;align-items:center;gap:6px;margin:5px;">' +
+                '<input type="text" id="name-' + i + '" placeholder="Player ' + (i+1) + ' Name" value="Player ' + (i+1) + '" style="width:130px;">' +
+                '<select id="gender-' + i + '" style="padding:8px 10px;border-radius:8px;border:1px solid rgba(255,255,255,0.4);font-family:Poppins,sans-serif;background:rgba(255,255,255,0.88);color:#333;">' +
+                '<option value="boy">\uD83D\uDC66 Boy</option>' +
+                '<option value="girl">\uD83D\uDC67 Girl</option>' +
+                '</select></div><br>';
         }
         document.getElementById('name-inputs').style.display = 'block';
     });
@@ -2087,11 +2232,14 @@
         var n = parseInt(document.getElementById('player-select').value);
         difficulty = document.getElementById('difficulty-select').value;
         var names = [];
+        var genders = [];
         for (var i = 0; i < n; i++) {
             names.push(document.getElementById('name-' + i).value || ('Player ' + (i + 1)));
+            var gEl = document.getElementById('gender-' + i);
+            genders.push(gEl ? gEl.value : 'boy');
         }
         document.getElementById('setup').style.display = 'none';
-        startGame(n, names);
+        startGame(n, names, genders);
         startMusic();
     });
 
