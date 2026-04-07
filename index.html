@@ -79,6 +79,7 @@
             padding: 5px;
             box-shadow: 0 8px 32px rgba(0,0,0,0.3);
             margin-bottom: 10px;
+            position: relative;
         }
         #board { display: block; width: 100%; border-radius: 10px; }
         #ui {
@@ -348,6 +349,143 @@
         }
         /* Prevent double-tap zoom on buttons */
         button, select, input { touch-action: manipulation; }
+
+        /* ===== FLOATING SCORE POPS ===== */
+        @keyframes floatUp {
+            0%   { opacity:1; transform:translateY(0) scale(1); }
+            50%  { opacity:1; transform:translateY(-28px) scale(1.1); }
+            100% { opacity:0; transform:translateY(-62px) scale(0.85); }
+        }
+        .float-pop {
+            position: fixed;
+            pointer-events: none;
+            font-size: 15px;
+            font-weight: 800;
+            font-family: 'Poppins', sans-serif;
+            text-shadow: 0 2px 8px rgba(0,0,0,0.55);
+            animation: floatUp 1.4s ease forwards;
+            z-index: 3000;
+            white-space: nowrap;
+        }
+
+        /* ===== ACHIEVEMENT TOASTS ===== */
+        @keyframes toastIn  { from { transform:translateX(110%); opacity:0; } to { transform:translateX(0); opacity:1; } }
+        @keyframes toastOut { from { transform:translateX(0); opacity:1; } to { transform:translateX(110%); opacity:0; } }
+        #achievements-tray {
+            position: fixed;
+            top: 70px;
+            right: 12px;
+            width: 240px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            z-index: 2500;
+            pointer-events: none;
+        }
+        .achievement-toast {
+            background: linear-gradient(135deg, rgba(20,10,50,0.97), rgba(50,10,80,0.97));
+            border: 1px solid rgba(255,215,0,0.65);
+            border-radius: 12px;
+            padding: 9px 13px;
+            color: #fff;
+            font-size: 12px;
+            font-weight: 700;
+            font-family: 'Poppins', sans-serif;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.5), 0 0 14px rgba(255,215,0,0.2);
+            animation: toastIn 0.4s ease forwards;
+            line-height: 1.4;
+        }
+        .achievement-toast.fade-out { animation: toastOut 0.4s ease forwards; }
+
+        /* ===== BOARD SECTION WIPE OVERLAY ===== */
+        #board-wipe {
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(5,5,20,0.92);
+            border-radius: 10px;
+            pointer-events: none;
+            opacity: 0;
+            transition: opacity 0.35s ease;
+            z-index: 10;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+            gap: 6px;
+            font-family: 'Poppins', sans-serif;
+        }
+        #board-wipe.visible { opacity: 1; }
+        #board-wipe-title {
+            font-size: 26px;
+            font-weight: 800;
+            color: #fff;
+            text-shadow: 0 0 24px rgba(255,255,255,0.6);
+            letter-spacing: 1px;
+            text-align: center;
+        }
+        #board-wipe-sub {
+            font-size: 14px;
+            color: rgba(255,255,255,0.72);
+            font-weight: 600;
+        }
+
+        /* ===== STREAK BANNER ===== */
+        @keyframes fireShake {
+            0%,100% { transform:rotate(-2deg) scale(1); }
+            50%      { transform:rotate(2deg) scale(1.04); }
+        }
+        .streak-banner {
+            background: linear-gradient(135deg, #ff6b35, #ffd700);
+            color: #fff;
+            border-radius: 8px;
+            padding: 7px 12px;
+            font-weight: 800;
+            font-size: 15px;
+            text-align: center;
+            margin-bottom: 6px;
+            animation: fireShake 0.45s ease-in-out;
+            box-shadow: 0 3px 12px rgba(255,107,53,0.6);
+            text-shadow: 0 1px 4px rgba(0,0,0,0.3);
+        }
+
+        /* ===== RANK BADGE ===== */
+        .rank-badge {
+            display: inline-block;
+            font-size: 11px;
+            font-weight: 700;
+            padding: 1px 6px;
+            border-radius: 10px;
+            background: rgba(0,0,0,0.25);
+            margin-left: 4px;
+        }
+
+        /* ===== TRADING CARD (END GAME) ===== */
+        .trade-card {
+            position: relative;
+            border-radius: 16px;
+            padding: 14px 16px;
+            margin-bottom: 10px;
+            overflow: hidden;
+            animation: cardPop 0.35s ease;
+        }
+        .trade-card::after {
+            content: '';
+            position: absolute;
+            top: -38px; right: -38px;
+            width: 90px; height: 90px;
+            border-radius: 50%;
+            background: rgba(255,255,255,0.08);
+        }
+        .trade-card-top { display:flex; align-items:flex-start; gap:12px; margin-bottom:10px; }
+        .trade-card-info { flex:1; }
+        .trade-card-canvas { border-radius:8px; background:rgba(0,0,0,0.2); flex-shrink:0; }
+        .trade-card-name  { font-size:16px; font-weight:800; margin-bottom:2px; }
+        .trade-card-tier  { display:inline-block; padding:2px 10px; border-radius:20px; font-size:11px; font-weight:700; background:rgba(255,255,255,0.2); border:1px solid rgba(255,255,255,0.35); margin-bottom:5px; }
+        .trade-card-stars { font-size:16px; letter-spacing:1px; margin-bottom:3px; }
+        .trade-card-career { font-size:12px; opacity:0.9; margin-bottom:6px; }
+        .trade-card-details { font-size:11px; line-height:1.65; opacity:0.88; }
+        .trade-card-scorebar { margin-top:8px; background:rgba(0,0,0,0.2); border-radius:6px; height:8px; overflow:hidden; }
+        .trade-card-scorefill { height:8px; border-radius:6px; background:rgba(255,255,255,0.72); transition:width 0.6s ease; }
     </style>
 </head>
 <body>
@@ -378,7 +516,9 @@
 
         <div id="board-container">
             <canvas id="board" width="900" height="520"></canvas>
+            <div id="board-wipe"><div id="board-wipe-title"></div><div id="board-wipe-sub"></div></div>
         </div>
+        <div id="achievements-tray"></div>
 
         <div id="ui">
             <div id="sidebar" class="panel">
@@ -440,82 +580,8 @@
 
     // Simple chiptune-style background melody using Web Audio API
     function startMusic() {
-        if (!audioContext || musicPlaying) return;
-        if (audioContext.state === 'suspended') audioContext.resume();
-        musicPlaying = true;
-        musicMuted = false;
-
-        // Create master gain node for music — allows instant mute/unmute
-        musicGain = audioContext.createGain();
-        musicGain.gain.setValueAtTime(1.0, audioContext.currentTime);
-        musicGain.connect(audioContext.destination);
-
-        // Melody notes (frequency, duration in beats)
-        var melody = [
-            [392, 1], [440, 1], [494, 1], [523, 2], [494, 1], [440, 1], [392, 1],
-            [349, 1], [330, 1], [294, 1], [330, 2], [349, 1], [392, 1], [440, 1],
-            [494, 1], [523, 1], [587, 1], [523, 2], [494, 1], [440, 1], [392, 1],
-            [440, 2], [392, 1], [349, 2], [330, 1], [294, 2], [330, 1], [349, 2],
-            [392, 1], [440, 1], [494, 1], [523, 1], [587, 2], [523, 1], [494, 1],
-            [440, 1], [392, 2], [349, 1], [330, 2], [294, 1], [330, 1], [349, 2],
-        ];
-
-        // Bass line (plays in parallel, lower octave)
-        var bass = [
-            [196, 4], [175, 4], [165, 4], [147, 4],
-            [196, 4], [175, 4], [165, 4], [147, 4],
-            [196, 4], [220, 4], [175, 4], [165, 4],
-        ];
-
-        var tempo = 0.18;
-        var noteIdx = 0;
-        var bassIdx = 0;
-        var melodyTime = audioContext.currentTime + 0.1;
-        var bassTime = audioContext.currentTime + 0.1;
-
-        function scheduleChunk() {
-            if (!musicPlaying) return;
-            var now = audioContext.currentTime;
-            while (melodyTime < now + 3) {
-                var note = melody[noteIdx % melody.length];
-                var dur = note[1] * tempo;
-                try {
-                    var osc = audioContext.createOscillator();
-                    var g = audioContext.createGain();
-                    osc.type = 'triangle';
-                    osc.frequency.setValueAtTime(note[0], melodyTime);
-                    g.gain.setValueAtTime(0.04, melodyTime);
-                    g.gain.exponentialRampToValueAtTime(0.001, melodyTime + dur * 0.95);
-                    osc.connect(g);
-                    g.connect(musicGain);
-                    osc.start(melodyTime);
-                    osc.stop(melodyTime + dur);
-                } catch(e) {}
-                melodyTime += dur;
-                noteIdx++;
-            }
-            while (bassTime < now + 3) {
-                var bnote = bass[bassIdx % bass.length];
-                var bdur = bnote[1] * tempo;
-                try {
-                    var osc2 = audioContext.createOscillator();
-                    var g2 = audioContext.createGain();
-                    osc2.type = 'sine';
-                    osc2.frequency.setValueAtTime(bnote[0], bassTime);
-                    g2.gain.setValueAtTime(0.025, bassTime);
-                    g2.gain.exponentialRampToValueAtTime(0.001, bassTime + bdur * 0.9);
-                    osc2.connect(g2);
-                    g2.connect(musicGain);
-                    osc2.start(bassTime);
-                    osc2.stop(bassTime + bdur);
-                } catch(e) {}
-                bassTime += bdur;
-                bassIdx++;
-            }
-        }
-
-        scheduleChunk();
-        musicInterval = setInterval(scheduleChunk, 1000);
+        currentMusicSection = 'none';
+        startSectionMusic('elementary');
     }
 
     function stopMusic() {
@@ -726,6 +792,172 @@
         animate();
     }
 
+    // ========== FLOATING SCORE POPS ==========
+    function showFloatingPop(text, color) {
+        var sidebar = document.getElementById('sidebar');
+        if (!sidebar || !gameStarted) return;
+        var rect = sidebar.getBoundingClientRect();
+        var el = document.createElement('div');
+        el.className = 'float-pop';
+        el.textContent = text;
+        el.style.color = color || '#FFD700';
+        el.style.left = (rect.left + rect.width * 0.5 + (Math.random() * 60 - 30)) + 'px';
+        el.style.top  = (rect.top  + rect.height * 0.35 + (Math.random() * 30 - 15)) + 'px';
+        document.body.appendChild(el);
+        setTimeout(function() { if (el.parentNode) el.remove(); }, 1500);
+    }
+
+    // ========== ACHIEVEMENT TOASTS ==========
+    var ACHIEVEMENTS = [
+        { id: 'first_middle',  emoji: '🏫', title: 'Middle Schooler!',    desc: 'Reached Middle School',           check: function(p) { return p.position >= 15; } },
+        { id: 'first_high',    emoji: '🎒', title: 'High Schooler!',       desc: 'Reached High School',             check: function(p) { return p.position >= 30; } },
+        { id: 'on_fire',       emoji: '🔥', title: 'ON FIRE! ×3 Streak',  desc: '3 correct answers in a row',      check: function(p) { return p.streak >= 3; } },
+        { id: 'inferno',       emoji: '🌋', title: 'INFERNO! ×5 Streak',  desc: '5 correct answers in a row',      check: function(p) { return p.streak >= 5; } },
+        { id: 'money_bags',    emoji: '💰', title: 'Money Bags!',          desc: 'Accumulated $150',                check: function(p) { return p.money >= 150; } },
+        { id: 'scholar',       emoji: '📚', title: 'Scholar!',             desc: '5 challenges passed',             check: function(p) { return p.challengesPassed >= 5; } },
+        { id: 'honor_roll',    emoji: '🏅', title: 'Honor Roll!',          desc: '10 challenges passed',            check: function(p) { return p.challengesPassed >= 10; } },
+        { id: 'committed',     emoji: '💪', title: 'Committed!',           desc: 'Commitment reached 8',            check: function(p) { return p.commitment >= 8; } },
+        { id: 'well_rounded',  emoji: '⭐', title: 'Well-Rounded!',        desc: 'Commitment AND Interest both ≥ 5', check: function(p) { return p.commitment >= 5 && p.interest >= 5; } },
+        { id: 'comeback',      emoji: '📈', title: 'Comeback Kid!',        desc: 'Overcame 2+ fails to reach 5 streak', check: function(p) { return p.challengesFailed >= 2 && p.streak >= 5; } },
+    ];
+
+    function showAchievementToast(pName, emoji, title, desc) {
+        var tray = document.getElementById('achievements-tray');
+        if (!tray) return;
+        var toast = document.createElement('div');
+        toast.className = 'achievement-toast';
+        toast.innerHTML = emoji + ' <b>' + pName + ': ' + title + '</b><br><span style="font-weight:400;opacity:0.85;">' + desc + '</span>';
+        tray.appendChild(toast);
+        setTimeout(function() {
+            toast.classList.add('fade-out');
+            setTimeout(function() { if (toast.parentNode) toast.remove(); }, 420);
+        }, 3400);
+    }
+
+    function checkAchievements(player) {
+        var key = 'p' + player.id + '_';
+        ACHIEVEMENTS.forEach(function(a) {
+            var aId = key + a.id;
+            if (!earnedAchievements.has(aId) && a.check(player)) {
+                earnedAchievements.add(aId);
+                showAchievementToast(player.character.name, a.emoji, a.title, a.desc);
+            }
+        });
+    }
+
+    // ========== SECTION TRANSITION WIPE ==========
+    function doSectionTransition(label, emoji) {
+        var wipe = document.getElementById('board-wipe');
+        if (!wipe) return;
+        document.getElementById('board-wipe-title').textContent = emoji + '  ' + label;
+        document.getElementById('board-wipe-sub').textContent = 'Welcome to the next chapter!';
+        wipe.classList.add('visible');
+        setTimeout(function() { wipe.classList.remove('visible'); }, 1500);
+    }
+
+    // ========== TILE PULSE ON LANDING ==========
+    function pulseLandingTile(tileIdx) {
+        pulseTileIdx = tileIdx;
+        pulseTileAlpha = 0;
+        pulseTileDir = 1;
+        pulseTileFrames = 0;
+        function tick() {
+            pulseTileFrames++;
+            pulseTileAlpha += pulseTileDir * 0.07;
+            if (pulseTileAlpha >= 1) { pulseTileAlpha = 1; pulseTileDir = -1; }
+            drawBoard();
+            if (pulseTileFrames < 36) requestAnimationFrame(tick);
+            else { pulseTileIdx = -1; drawBoard(); }
+        }
+        requestAnimationFrame(tick);
+    }
+
+    // ========== SECTION-SPECIFIC MUSIC ==========
+    function switchToSectionMusic(sectionKey) {
+        if (currentMusicSection === sectionKey) return;
+        currentMusicSection = sectionKey;
+        stopMusic();
+        setTimeout(function() { startSectionMusic(sectionKey); }, 200);
+    }
+
+    function startSectionMusic(sectionKey) {
+        if (!audioContext) return;
+        if (audioContext.state === 'suspended') audioContext.resume();
+        if (musicPlaying) return;
+        musicPlaying = true;
+        musicMuted = false;
+        musicGain = audioContext.createGain();
+        musicGain.gain.setValueAtTime(1.0, audioContext.currentTime);
+        musicGain.connect(audioContext.destination);
+        var melodies = {
+            elementary: [
+                [392,1],[440,1],[494,1],[523,2],[494,1],[440,1],[392,1],
+                [349,1],[330,1],[294,1],[330,2],[349,1],[392,1],[440,1],
+                [494,1],[523,1],[587,1],[523,2],[494,1],[440,1],[392,1],
+                [440,2],[392,1],[349,2],[330,1],[294,2],[330,1],[349,2],
+            ],
+            middle: [
+                [440,1],[494,1],[523,1],[494,1],[440,2],[415,1],[440,1],
+                [392,1],[415,1],[440,2],[392,1],[349,1],[330,1],[349,2],
+                [392,1],[440,1],[494,1],[523,1],[494,2],[440,1],[415,1],
+                [440,2],[392,2],[349,2],[330,2],[349,1],[392,2],
+            ],
+            high: [
+                [587,1],[659,1],[698,1],[659,2],[587,1],[554,1],[523,1],
+                [494,1],[523,1],[554,2],[587,1],[659,1],[698,1],[740,2],
+                [698,1],[659,1],[587,1],[554,2],[523,1],[494,1],[440,2],
+                [494,1],[523,1],[554,1],[587,2],[554,1],[523,1],[494,2],
+            ]
+        };
+        var bassLines = {
+            elementary: [[196,4],[175,4],[165,4],[147,4],[196,4],[175,4],[165,4],[147,4]],
+            middle:     [[220,4],[196,4],[175,4],[165,4],[220,4],[196,4],[175,4],[196,4]],
+            high:       [[293,4],[261,4],[246,4],[261,4],[293,4],[311,4],[293,4],[261,4]]
+        };
+        var melody   = melodies[sectionKey]   || melodies.elementary;
+        var bassLine = bassLines[sectionKey]  || bassLines.elementary;
+        var tempo = sectionKey === 'high' ? 0.155 : sectionKey === 'middle' ? 0.168 : 0.18;
+        var noteIdx = 0, bassIdx = 0;
+        var melodyTime = audioContext.currentTime + 0.1;
+        var bassTime   = audioContext.currentTime + 0.1;
+        function scheduleChunk() {
+            if (!musicPlaying) return;
+            var now = audioContext.currentTime;
+            while (melodyTime < now + 3) {
+                var note = melody[noteIdx % melody.length];
+                var dur = note[1] * tempo;
+                try {
+                    var osc = audioContext.createOscillator();
+                    var g = audioContext.createGain();
+                    osc.type = 'triangle';
+                    osc.frequency.setValueAtTime(note[0], melodyTime);
+                    g.gain.setValueAtTime(0.04, melodyTime);
+                    g.gain.exponentialRampToValueAtTime(0.001, melodyTime + dur * 0.95);
+                    osc.connect(g); g.connect(musicGain);
+                    osc.start(melodyTime); osc.stop(melodyTime + dur);
+                } catch(e) {}
+                melodyTime += dur; noteIdx++;
+            }
+            while (bassTime < now + 3) {
+                var bn = bassLine[bassIdx % bassLine.length];
+                var bd = bn[1] * tempo;
+                try {
+                    var osc2 = audioContext.createOscillator();
+                    var g2 = audioContext.createGain();
+                    osc2.type = 'sine';
+                    osc2.frequency.setValueAtTime(bn[0], bassTime);
+                    g2.gain.setValueAtTime(0.025, bassTime);
+                    g2.gain.exponentialRampToValueAtTime(0.001, bassTime + bd * 0.9);
+                    osc2.connect(g2); g2.connect(musicGain);
+                    osc2.start(bassTime); osc2.stop(bassTime + bd);
+                } catch(e) {}
+                bassTime += bd; bassIdx++;
+            }
+        }
+        scheduleChunk();
+        musicInterval = setInterval(scheduleChunk, 1000);
+    }
+
     // ========== GAME STATE ==========
     let players = [];
     let currentPlayer = 0;
@@ -739,6 +971,15 @@
     let totalTurns = 0; // global turn counter
     let difficulty = 'hard'; // 'easy' or 'hard'
     let usedQuestions = { elementary: [], middle: [], high: [], easyhs: [] };
+
+    // ===== NEW FEATURE STATE =====
+    let lastBoardSection = '';
+    let earnedAchievements = new Set();
+    let pulseTileIdx = -1;
+    let pulseTileAlpha = 0;
+    let pulseTileDir = 1;
+    let pulseTileFrames = 0;
+    let currentMusicSection = 'none';
 
     const characters = [
         { name: 'Alex', color: '#FFDBAC', hair: '#8B4513', clothes: '#4A90D9' },
@@ -1333,6 +1574,18 @@
             roundRect(ctx, pos.x - pos.w/2, pos.y - pos.h/2, pos.w, pos.h, 6);
             ctx.stroke();
 
+            // Pulse glow on just-landed tile
+            if (absIdx === pulseTileIdx) {
+                ctx.save();
+                ctx.shadowColor = '#ffffff';
+                ctx.shadowBlur = 18 + pulseTileAlpha * 28;
+                ctx.strokeStyle = 'rgba(255,255,255,' + (0.35 + pulseTileAlpha * 0.65) + ')';
+                ctx.lineWidth = 3.5;
+                roundRect(ctx, pos.x - pos.w/2, pos.y - pos.h/2, pos.w, pos.h, 6);
+                ctx.stroke();
+                ctx.restore();
+            }
+
             ctx.shadowColor = 'rgba(255,255,255,0.8)';
             ctx.shadowBlur = 6;
             ctx.font = '20px Arial';
@@ -1356,11 +1609,11 @@
             var pos = getTilePos(localIdx, sectionTiles);
             var sameTile = players.filter(function(p, j) { return j < i && Math.floor(p.position) === tileIdx; }).length;
             var offsetX = sameTile * 14 - 7;
-            drawCharacter(ctx, player.character, pos.x + offsetX, pos.y - 36);
+            drawCharacter(ctx, player.character, pos.x + offsetX, pos.y - 36, player.mood || 'default');
         });
     }
 
-    function drawCharacter(ctx, char, x, y) {
+    function drawCharacter(ctx, char, x, y, mood) {
         ctx.save();
         ctx.translate(x, y);
         var isGirl = char.gender === 'girl';
@@ -1389,6 +1642,22 @@
         } else {
             ctx.beginPath(); ctx.arc(0, -14, 4, Math.PI, 2 * Math.PI); ctx.fill();
         }
+        // Mood expression on face
+        ctx.save();
+        ctx.strokeStyle = 'rgba(0,0,0,0.55)'; ctx.lineWidth = 0.9; ctx.lineCap = 'round';
+        ctx.beginPath();
+        var m = mood || 'default';
+        if (m === 'happy') {
+            ctx.arc(0, -11.5, 2, 0.15, Math.PI - 0.15);           // big smile
+        } else if (m === 'sad') {
+            ctx.arc(0, -9.8, 2, Math.PI + 0.15, 2*Math.PI - 0.15); // frown
+        } else if (m === 'nervous') {
+            ctx.moveTo(-1.8, -11); ctx.lineTo(1.8, -11);             // flat line
+        } else {
+            ctx.arc(0, -11, 1.5, 0.2, Math.PI - 0.2);               // gentle smile
+        }
+        ctx.stroke();
+        ctx.restore();
         // Name label
         ctx.fillStyle = '#fff'; ctx.font = 'bold 7px Arial'; ctx.textAlign = 'center';
         ctx.strokeStyle = '#000'; ctx.lineWidth = 2;
@@ -1531,6 +1800,9 @@
         finishOrder = [];
         totalTurns = 0;
         usedQuestions = { elementary: [], middle: [], high: [], easyhs: [] };
+        lastBoardSection = '';
+        earnedAchievements = new Set();
+        currentMusicSection = 'none';
         for (var i = 0; i < numPlayers; i++) {
             var c = shuffled[i % shuffled.length];
             players.push({
@@ -1546,6 +1818,8 @@
                 challengesFailed: 0,
                 turnsUsed: 0,
                 finished: false,
+                streak: 0,
+                mood: 'default',
                 character: Object.assign({}, c, { name: playerNames[i], gender: playerGenders ? (playerGenders[i] || 'boy') : 'boy' })
             });
         }
@@ -1594,8 +1868,25 @@
         var space = boardSpaces[player.position];
         document.getElementById('age-display').textContent = player.character.name + ' \u2014 Age ' + space.age + ' | GPA Score: ' + getPlayerGPA(player) + ' (' + getPlayerTier(player) + ')';
 
+        // Pulse the landed tile
+        pulseLandingTile(player.position);
+
+        // Section transition wipe + music switch
+        var currSection = getGradeSection(player.position);
+        var currSectionName = currSection.name;
+        if (lastBoardSection && lastBoardSection !== currSectionName) {
+            var transEmoji = currSectionName === 'Middle School' ? '\ud83c\udfeb' : '\ud83c\udf93';
+            doSectionTransition(currSectionName, transEmoji);
+        }
+        var musicKey = currSectionName === 'High School' ? 'high' : currSectionName === 'Middle School' ? 'middle' : 'elementary';
+        switchToSectionMusic(musicKey);
+        lastBoardSection = currSectionName;
+        checkAchievements(player);
+
         switch (space.type) {
             case 'challenge':
+                player.mood = 'nervous';
+                drawBoard();
                 showInteractiveChallenge(space);
                 break;
             case 'chance':
@@ -1775,15 +2066,37 @@
             answerReveal += '</div>';
         }
 
+        // ---- Streak tracking ----
+        var streakHtml = '';
+        if (grade >= 6) {
+            player.streak = (player.streak || 0) + 1;
+            if (player.streak === 3) {
+                player.money += 5;
+                showFloatingPop('\ud83d\udd25 ON FIRE! +$5 bonus!', '#ff6b35');
+            }
+            if (player.streak === 5) {
+                player.money += 10;
+                showFloatingPop('\ud83c\udf0b INFERNO! +$10 bonus!', '#ff4500');
+            }
+            if (player.streak >= 5)
+                streakHtml = '<div class="streak-banner">\ud83c\udf0b INFERNO! ' + player.streak + ' in a row! +$10 BONUS!</div>';
+            else if (player.streak >= 3)
+                streakHtml = '<div class="streak-banner">\ud83d\udd25 ON FIRE! ' + player.streak + ' in a row! +$5 BONUS!</div>';
+        } else {
+            player.streak = 0;
+        }
+
         if (grade < 6) {
             player.challengesFailed++;
             player.badChoices++;
-            cardDiv.innerHTML = '<div class="card-display bad">' +
+            player.mood = 'sad';
+            cardDiv.innerHTML = streakHtml + '<div class="card-display bad">' +
                 '<h3>Grade: ' + grade + '/10 \u2014 FAIL!</h3>' +
                 '<p>You didn\'t pass the test!</p>' +
                 '<p>Go back 1 space. -1 Commitment.</p>' +
                 answerReveal +
                 '<p style="font-size:11px;margin-top:8px;opacity:0.8;">Remember: failing now makes things harder later!</p></div>';
+            showFloatingPop('\u274c FAIL \u2212$1 \ud83d\udcda', '#f87171');
             playBooSound();
             player.commitment = Math.max(0, player.commitment - 1);
             player.position = Math.max(0, player.position - 1);
@@ -1791,11 +2104,13 @@
         } else if (grade === 10) {
             player.challengesPassed++;
             player.goodChoices++;
-            cardDiv.innerHTML = '<div class="card-display good">' +
+            player.mood = 'happy';
+            cardDiv.innerHTML = streakHtml + '<div class="card-display good">' +
                 '<h3>Grade: 10/10 \u2014 PERFECT!</h3>' +
                 '<p>You ACED it!</p>' +
                 '<p>Move forward 1 space! +$15 bonus! +2 Commitment!</p>' +
                 answerReveal + '</div>';
+            showFloatingPop('+$15 \ud83d\udcb0 +2 \ud83d\udcda PERFECT!', '#FFD700');
             playCheerSound();
             player.money += 15;
             player.commitment += 2;
@@ -1803,14 +2118,17 @@
             drawBoard();
         } else {
             player.challengesPassed++;
-            cardDiv.innerHTML = '<div class="card-display neutral">' +
+            player.mood = 'happy';
+            cardDiv.innerHTML = streakHtml + '<div class="card-display neutral">' +
                 '<h3>Grade: ' + grade + '/10 \u2014 PASSED!</h3>' +
                 '<p>Not bad! You passed.</p>' +
                 '<p>Stay here. +1 Commitment.</p>' +
                 answerReveal + '</div>';
+            showFloatingPop('+1 \ud83d\udcda Commitment', '#60a5fa');
             playCheerSound();
             player.commitment += 1;
         }
+        checkAchievements(player);
         updateUI();
         endTurnAfterDelay();
     }
@@ -2206,6 +2524,10 @@
             outcome.lifestyle = pickedCareer.lifestyle;
             outcome.emoji     = pickedCareer.emoji;
             outcome.careerScore = Math.round(careerScore);
+            outcome.char      = p.character;
+            outcome.mood      = careerScore >= 22 ? 'happy' : careerScore >= 11 ? 'default' : 'sad';
+            outcome.stars     = careerScore >= 22 ? (Math.random() < 0.5 ? 5 : 4) :
+                                careerScore >= 11 ? (Math.random() < 0.5 ? 3 : 2) : 1;
 
             return outcome;
         });
@@ -2213,37 +2535,59 @@
         // Sort by score
         results.sort(function(a, b) { return b.score - a.score; });
 
-        var html = '<div style="max-height:400px;overflow-y:auto;">';
-        html += '<div class="card-display gold" style="margin-bottom:12px;"><h3>\u{1F393} GRADUATION DAY \u{1F393}</h3>';
+        var html = '<div style="max-height:460px;overflow-y:auto;padding-right:2px;">';
+        html += '<div class="card-display gold" style="margin-bottom:12px;text-align:center;"><h3>\u{1F393} GRADUATION DAY \u{1F393}</h3>';
         html += '<p>Your choices shaped your future. Here\'s where life takes each of you...</p></div>';
 
         results.forEach(function(o, i) {
             var placeEmoji = o.finishPlace === 1 ? '\u{1F947}' : o.finishPlace === 2 ? '\u{1F948}' : o.finishPlace === 3 ? '\u{1F949}' : '\u{1F3C5}';
-            html += '<div class="card-display ' + o.color + '" style="margin-bottom:10px;text-align:left;">';
-            html += '<h3>' + (i === 0 ? '\u{1F3C6} WINNER: ' : (i + 1) + '. ') + o.name + ' ' + o.emoji + '</h3>';
-            html += '<p style="font-size:12px;margin-bottom:6px;"><span style="background:rgba(0,0,0,0.2);padding:2px 8px;border-radius:12px;font-weight:700;">Career Tier: ' + o.careerTier + '</span> &nbsp;<span style="font-size:11px;opacity:0.8;">Score: ' + o.careerScore + ' pts</span></p>';
-            html += '<p><b>Career:</b> ' + o.career + '</p>';
-            html += '<p><b>Salary:</b> ' + o.salary + '</p>';
-            html += '<p><b>At Retirement:</b> ' + o.retirement + '</p>';
-            html += '<p><b>Family:</b> ' + o.family + '</p>';
-            html += '<p><b>Life at 65:</b> ' + o.lifestyle + '</p>';
-            html += '<div style="background:rgba(0,0,0,0.15);border-radius:6px;padding:6px 8px;margin-top:6px;font-size:11px;">';
-            html += placeEmoji + ' Graduated ' + o.finishPlace + getOrdinal(o.finishPlace) + ' (' + o.turnsUsed + ' turns)';
-            html += ' | Base: ' + o.baseScore + ' pts';
-            html += ' | <b>Multiplier: ' + o.multiplier + 'x</b>';
-            html += (o.speedFactor > 0 ? ' \u{1F525}' : ' \u274C no speed bonus');
-            html += '<br><b>FINAL SCORE: ' + o.score + ' pts</b>';
+            var bgStyle = o.color === 'good' ? 'background:linear-gradient(135deg,rgba(11,232,129,0.38),rgba(0,180,216,0.35));border:1px solid rgba(11,232,129,0.4);color:#fff;' :
+                          o.color === 'bad'  ? 'background:linear-gradient(135deg,rgba(247,37,133,0.38),rgba(181,23,158,0.35));border:1px solid rgba(247,37,133,0.4);color:#fff;' :
+                                               'background:linear-gradient(135deg,rgba(67,97,238,0.38),rgba(76,201,240,0.35));border:1px solid rgba(67,97,238,0.4);color:#fff;';
+            var starsHtml = '\u2b50'.repeat(o.stars) + '\u2606'.repeat(5 - o.stars);
+            var scoreBarW = Math.min(100, Math.round(o.careerScore / 33 * 100));
+            html += '<div class="trade-card" style="' + bgStyle + '">';
+            html += '<div class="trade-card-top">';
+            html += '<canvas id="tc-' + i + '" width="52" height="66" class="trade-card-canvas"></canvas>';
+            html += '<div class="trade-card-info">';
+            html += '<div class="trade-card-name">' + (i === 0 ? '\u{1F3C6} ' : placeEmoji + ' ') + o.name + '</div>';
+            html += '<div class="trade-card-tier">' + o.careerTier + '</div>';
+            html += '<div class="trade-card-stars">' + starsHtml + '</div>';
+            html += '<div class="trade-card-career">' + o.emoji + ' ' + o.career + '</div>';
+            html += '</div></div>';
+            html += '<div class="trade-card-details">';
+            html += '\ud83d\udcb5 <b>Salary:</b> ' + o.salary + '<br>';
+            html += '\ud83c\udfe1 <b>Family:</b> ' + o.family + '<br>';
+            html += '\u{1F334} <b>Life at 65:</b> ' + o.lifestyle + '<br>';
+            html += '\ud83c\udfe6 <b>Retirement:</b> ' + o.retirement;
             html += '</div>';
+            html += '<div style="display:flex;justify-content:space-between;align-items:center;margin-top:8px;font-size:11px;opacity:0.85;">';
+            html += '<span>' + placeEmoji + ' ' + o.finishPlace + getOrdinal(o.finishPlace) + ' &bull; ' + o.turnsUsed + ' turns &bull; Score: <b>' + o.score + '</b></span>';
+            html += '<span style="opacity:0.75;">Career: ' + o.careerScore + ' pts</span>';
+            html += '</div>';
+            html += '<div class="trade-card-scorebar" style="margin-top:6px;"><div class="trade-card-scorefill" style="width:' + scoreBarW + '%;"></div></div>';
             html += '</div>';
         });
 
         html += '<div style="text-align:center;margin-top:12px;font-weight:bold;font-size:14px;color:#333;">' +
             'The lesson: Every choice matters. Study hard, be kind, work at it \u2014 and your future self will thank you!</div>';
-        html += '<div style="text-align:center;margin-top:6px;font-size:11px;color:#666;">Multiplier: Speed (' + (players.length > 1 ? 'up to +0.5x' : 'N/A solo') + ') + Choices (up to +0.4x) + Challenges (up to +0.3x). Bad choices forfeit speed bonus!</div>';
         html += '<div style="text-align:center;margin-top:14px;"><button id="restart-btn" style="padding:12px 30px;font-size:16px;background:#4CAF50;color:white;border:none;border-radius:8px;cursor:pointer;font-weight:bold;">\u{1F504} Play Again!</button></div>';
         html += '</div>';
 
         document.getElementById('current-card').innerHTML = html;
+
+        // Draw mini characters on trading card canvases
+        setTimeout(function() {
+            results.forEach(function(o, i) {
+                var tc = document.getElementById('tc-' + i);
+                if (!tc) return;
+                var tctx = tc.getContext('2d');
+                tctx.clearRect(0, 0, 52, 66);
+                tctx.fillStyle = 'rgba(0,0,0,0.18)';
+                tctx.fillRect(0, 0, 52, 66);
+                drawCharacter(tctx, o.char, 26, 46, o.mood);
+            });
+        }, 60);
         var allColors = players.map(function(p) { return p.character.clothes; });
         launchGradCaps(allColors, 35);
         playCheerSound();
@@ -2266,6 +2610,9 @@
             totalTurns = 0;
             gameStarted = false;
             difficulty = 'hard';
+            lastBoardSection = '';
+            earnedAchievements = new Set();
+            currentMusicSection = 'none';
             document.getElementById('difficulty-select').value = 'hard';
             initBoard();
             drawBoard();
@@ -2283,6 +2630,14 @@
     // ========== UI ==========
     function updateUI() {
         var statsDiv = document.getElementById('stats');
+
+        // Compute live ranks by composite score
+        var rankedPlayers = players.slice().sort(function(a, b) {
+            return (b.money + b.commitment * 50 + b.interest * 40 + b.balance * 30) -
+                   (a.money + a.commitment * 50 + a.interest * 40 + a.balance * 30);
+        });
+        var rankMedals = ['\ud83e\udd47', '\ud83e\udd48', '\ud83e\udd49'];
+
         statsDiv.innerHTML = players.map(function(p, i) {
             var cur = i === currentPlayer && gameStarted;
             var age = boardSpaces[Math.min(p.position, boardSpaces.length - 1)].age || '?';
@@ -2292,10 +2647,12 @@
             var moneyPct  = Math.min(100, Math.round(p.money / 2));
             var commitPct = Math.min(100, Math.round(p.commitment * 10));
             var interPct  = Math.min(100, Math.round(p.interest * 10));
-            var balPct    = Math.min(100, Math.max(0, Math.round((p.balance + 5) * 7)));
             var clr = p.character.clothes;
+            var rank = rankedPlayers.indexOf(p);
+            var rankBadge = '<span class="rank-badge" style="color:' + (rank === 0 ? '#FFD700' : rank === 1 ? '#C0C0C0' : rank === 2 ? '#cd7f32' : 'rgba(255,255,255,0.5)') + ';background:rgba(0,0,0,0.25);">' + (rankMedals[rank] || '#' + (rank + 1)) + '</span>';
+            var streakBadge = (p.streak >= 3) ? ' <span style="font-size:11px;">' + (p.streak >= 5 ? '\ud83c\udf0b' : '\ud83d\udd25') + '\u00d7' + p.streak + '</span>' : '';
             return '<div class="player-stat ' + (cur ? 'current' : '') + '" style="background-color:' + clr + '28; border-left:4px solid ' + clr + (p.finished ? ';opacity:0.65' : '') + '">' +
-                '<div class="stat-name">' + (cur ? '\u25B6 ' : '') + p.character.name + finishedTag + ' &nbsp;<span style="font-size:9px;font-weight:400;opacity:0.8;">Age ' + age + ' &bull; GPA: <span style="color:' + tierColor + ';font-weight:700;">' + tier.toUpperCase() + '</span></span></div>' +
+                '<div class="stat-name">' + (cur ? '\u25B6 ' : '') + p.character.name + finishedTag + rankBadge + streakBadge + ' &nbsp;<span style="font-size:9px;font-weight:400;opacity:0.8;">Age ' + age + ' &bull; GPA: <span style="color:' + tierColor + ';font-weight:700;">' + tier.toUpperCase() + '</span></span></div>' +
                 '<div class="stat-label">\uD83D\uDCB0 Money ($' + p.money + ')</div>' +
                 '<div class="stat-bar-wrap"><div class="stat-bar" style="width:' + moneyPct + '%;background:' + clr + ';"></div></div>' +
                 '<div class="stat-label">\uD83D\uDCDA Commitment (' + p.commitment + ')</div>' +
