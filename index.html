@@ -1940,25 +1940,48 @@
     };
 
     function playVideoThenContinue(tileIndex, callback) {
-        var src = tileVideos[tileIndex];
-        if (!src) { callback(); return; }
+        var relativeSrc = tileVideos[tileIndex];
+        if (!relativeSrc) { callback(); return; }
+
+        // Build absolute URL relative to this HTML file so file:// resolves correctly
+        var base = window.location.href.replace(/[^\/]*$/, '');
+        var src = base + relativeSrc;
+
         var overlay = document.getElementById('video-overlay');
         var vid = document.getElementById('tile-video');
         var skipBtn = document.getElementById('video-skip-btn');
-        overlay.classList.add('active');
-        vid.src = src;
+
+        var done = false;
         function finish() {
+            if (done) return;
+            done = true;
             vid.pause();
-            vid.src = '';
+            vid.removeAttribute('src');
+            vid.load();
             overlay.classList.remove('active');
             skipBtn.removeEventListener('click', finish);
             vid.removeEventListener('ended', finish);
-            vid.removeEventListener('error', finish);
+            vid.removeEventListener('error', onError);
             callback();
         }
+        function onError() {
+            // Video failed to load — hide overlay and continue without stalling the game
+            console.warn('Tile video failed to load:', src);
+            if (done) return;
+            done = true;
+            vid.removeAttribute('src');
+            vid.load();
+            overlay.classList.remove('active');
+            skipBtn.removeEventListener('click', finish);
+            vid.removeEventListener('ended', finish);
+            callback();
+        }
+
+        overlay.classList.add('active');
         vid.addEventListener('ended', finish, { once: true });
-        vid.addEventListener('error', finish, { once: true });
+        vid.addEventListener('error', onError, { once: true });
         skipBtn.addEventListener('click', finish, { once: true });
+        vid.src = src;
         vid.load();
         vid.play().catch(function() {});
     }
