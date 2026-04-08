@@ -47,7 +47,7 @@
         }
         body.dark #board-container { background: rgba(10,10,30,0.6); }
         #container {
-            max-width: 920px;
+            max-width: 100%;
             margin: 0 auto;
             padding: 5px 8px;
             height: 100vh;
@@ -83,20 +83,40 @@
             border-radius: 14px;
             padding: 5px;
             box-shadow: 0 8px 32px rgba(0,0,0,0.3);
-            margin-bottom: 5px;
             position: relative;
             flex: 1;
+            min-width: 0;
             min-height: 0;
             display: flex;
-            align-items: flex-start;
+            align-items: center;
             justify-content: center;
         }
         #board { display: block; max-width: 100%; max-height: 100%; width: auto; height: auto; border-radius: 10px; }
-        #ui {
+        #game-row {
             display: flex;
             gap: 8px;
-            margin-bottom: 4px;
+            flex: 1;
+            min-height: 0;
+        }
+        #right-panel {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            width: 240px;
             flex-shrink: 0;
+            min-height: 0;
+            overflow-y: auto;
+        }
+        #right-panel .panel {
+            flex-shrink: 0;
+        }
+        #card-area {
+            flex: 1 !important;
+            min-height: 80px;
+            overflow-y: auto;
+        }
+        #ui {
+            display: none;
         }
         .panel {
             background: rgba(255,255,255,0.18);
@@ -314,6 +334,9 @@
         /* Keep UI panels in a row down to 580px (covers iPad portrait) */
         @media (max-width: 580px) {
             #ui { flex-direction: column; }
+            #game-row { flex-direction: column; }
+            #right-panel { width: 100%; flex-direction: row; flex-wrap: wrap; overflow-y: visible; }
+            #right-panel .panel { flex: 1; min-width: 140px; }
         }
         /* Touch-target sizing for tablets and phones */
         @media (max-width: 768px) {
@@ -558,32 +581,34 @@
             </div>
         </div>
 
-        <div id="board-container">
-            <canvas id="board" width="900" height="520"></canvas>
-            <div id="board-wipe"><div id="board-wipe-title"></div><div id="board-wipe-sub"></div></div>
-        </div>
-        <div id="achievements-tray"></div>
+        <div id="game-row">
+            <div id="board-container">
+                <canvas id="board" width="900" height="520"></canvas>
+                <div id="board-wipe"><div id="board-wipe-title"></div><div id="board-wipe-sub"></div></div>
+            </div>
 
-        <div id="ui">
-            <div id="sidebar" class="panel">
-                <h3>&#128202; Player Stats</h3>
-                <div id="stats"></div>
-                <div style="margin-top:8px;">
-                    <button id="save-game" style="padding:4px 8px;font-size:11px;">Save</button>
-                    <button id="load-game" style="padding:4px 8px;font-size:11px;">Load</button>
+            <div id="right-panel">
+                <div id="sidebar" class="panel">
+                    <h3>&#128202; Player Stats</h3>
+                    <div id="stats"></div>
+                    <div style="margin-top:8px;">
+                        <button id="save-game" style="padding:4px 8px;font-size:11px;">Save</button>
+                        <button id="load-game" style="padding:4px 8px;font-size:11px;">Load</button>
+                    </div>
+                </div>
+                <div id="spinner-area" class="panel">
+                    <h3>&#127919; Spinner</h3>
+                    <canvas id="spinner" width="150" height="150"></canvas>
+                    <button id="spin-button">SPIN!</button>
+                    <div id="spin-result"></div>
+                </div>
+                <div id="card-area" class="panel">
+                    <h3>&#128203; Current Event</h3>
+                    <div id="current-card"></div>
                 </div>
             </div>
-            <div id="card-area" class="panel">
-                <h3>&#128203; Current Event</h3>
-                <div id="current-card"></div>
-            </div>
-            <div id="spinner-area" class="panel">
-                <h3>&#127919; Spinner</h3>
-                <canvas id="spinner" width="150" height="150"></canvas>
-                <button id="spin-button">SPIN!</button>
-                <div id="spin-result"></div>
-            </div>
         </div>
+        <div id="achievements-tray"></div>
 
         <div class="toolbar">
             <button id="toggle-mode">Dark Mode</button>
@@ -1532,8 +1557,9 @@
         return { name: 'High School', label: 'HIGH SCHOOL (Age 14-18)', start: 30, end: 49, color: '#C9FFB3', bgTop: '#2a1a47', bgBot: '#301650' };
     }
 
-    // ========== TILE LAYOUT (Serpentine path) ==========
+    // ========== TILE LAYOUT (3rd-person perspective path) ==========
     function getTilePos(index, totalTiles) {
+        // Legacy fallback — not used by new drawBoard but kept for compatibility
         totalTiles = totalTiles || 50;
         var perRow = 10;
         var row = Math.floor(index / perRow);
@@ -1568,125 +1594,300 @@
         ctx.closePath();
     }
 
+    // ========== RACING POSITION STRIP ==========
+    function drawPositionStrip(ctx, canvasW) {
+        var stripY = 6, stripH = 22, stripX = 60, stripW = canvasW - 120;
+        var totalTiles = boardSpaces.length;
+
+        // Background track
+        ctx.fillStyle = 'rgba(0,0,0,0.4)';
+        roundRect(ctx, stripX, stripY, stripW, stripH, 8);
+        ctx.fill();
+        ctx.strokeStyle = 'rgba(255,255,255,0.3)';
+        ctx.lineWidth = 1;
+        roundRect(ctx, stripX, stripY, stripW, stripH, 8);
+        ctx.stroke();
+
+        // Section markers
+        var sections = [
+            { end: 14, color: '#FFB3BA', label: 'Elem' },
+            { end: 29, color: '#BAE1FF', label: 'Mid' },
+            { end: 49, color: '#C9FFB3', label: 'High' }
+        ];
+        var prevEnd = 0;
+        sections.forEach(function(sec) {
+            var x1 = stripX + (prevEnd / totalTiles) * stripW;
+            var x2 = stripX + ((sec.end + 1) / totalTiles) * stripW;
+            ctx.fillStyle = sec.color;
+            ctx.globalAlpha = 0.15;
+            ctx.fillRect(x1, stripY, x2 - x1, stripH);
+            ctx.globalAlpha = 1;
+            // Divider line
+            if (sec.end < totalTiles - 1) {
+                ctx.strokeStyle = 'rgba(255,255,255,0.4)';
+                ctx.lineWidth = 1;
+                ctx.beginPath();
+                ctx.moveTo(x2, stripY + 3);
+                ctx.lineTo(x2, stripY + stripH - 3);
+                ctx.stroke();
+            }
+            prevEnd = sec.end + 1;
+        });
+
+        // Labels
+        ctx.font = 'bold 7px Arial';
+        ctx.textAlign = 'left';
+        ctx.fillStyle = 'rgba(255,255,255,0.5)';
+        ctx.fillText('START', stripX + 3, stripY + stripH / 2 + 2);
+        ctx.textAlign = 'right';
+        ctx.fillText('GRAD', stripX + stripW - 3, stripY + stripH / 2 + 2);
+        ctx.textAlign = 'center';
+
+        // Player markers
+        players.forEach(function(player, i) {
+            if (player.finished) return;
+            var pos = Math.min(Math.floor(player.position), totalTiles - 1);
+            var px = stripX + (pos / (totalTiles - 1)) * stripW;
+            var py = stripY + stripH / 2;
+
+            // Glow for current player
+            if (i === currentPlayer) {
+                ctx.shadowColor = '#FFD700';
+                ctx.shadowBlur = 8;
+            }
+
+            // Colored dot
+            ctx.fillStyle = player.character.clothes;
+            ctx.beginPath();
+            ctx.arc(px, py, 5, 0, 2 * Math.PI);
+            ctx.fill();
+            ctx.strokeStyle = i === currentPlayer ? '#FFD700' : '#fff';
+            ctx.lineWidth = i === currentPlayer ? 2 : 1;
+            ctx.stroke();
+            ctx.shadowColor = 'transparent';
+            ctx.shadowBlur = 0;
+
+            // Name initial
+            ctx.fillStyle = '#fff';
+            ctx.font = 'bold 6px Arial';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText(player.character.name.charAt(0), px, py);
+        });
+    }
+
+    // ========== 3RD PERSON BOARD ==========
     function drawBoard() {
         var canvas = document.getElementById('board');
         var ctx = canvas.getContext('2d');
         ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-        // Determine which grade section to show based on current player
+        var cw = canvas.width, ch = canvas.height;
+
+        // Current player position
         var currentPos = players.length > 0 ? Math.min(Math.floor(players[currentPlayer].position), boardSpaces.length - 1) : 0;
         var section = getGradeSection(currentPos);
-        var sectionTiles = section.end - section.start + 1;
 
-        var bgGrad = ctx.createLinearGradient(0, 0, 0, canvas.height);
+        // Background gradient
+        var bgGrad = ctx.createLinearGradient(0, 0, 0, ch);
         bgGrad.addColorStop(0, section.bgTop);
         bgGrad.addColorStop(1, section.bgBot);
         ctx.fillStyle = bgGrad;
-        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        ctx.fillRect(0, 0, cw, ch);
 
-        // Section title banner
-        ctx.font = 'bold 18px Arial';
+        // Draw racing position strip at top
+        drawPositionStrip(ctx, cw);
+
+        // Section title
+        ctx.font = 'bold 16px Arial';
         ctx.textAlign = 'center';
         ctx.fillStyle = section.color;
         ctx.globalAlpha = 0.7;
-        ctx.fillText(section.label, canvas.width / 2, 22);
+        ctx.fillText(section.label, cw / 2, 44);
         ctx.globalAlpha = 1;
 
-        // Show other players' locations if they're in a different section
-        var otherInfo = [];
-        players.forEach(function(p, i) {
-            if (i === currentPlayer) return;
-            var pPos = Math.min(Math.floor(p.position), boardSpaces.length - 1);
-            var pSec = getGradeSection(pPos);
-            if (pSec.start !== section.start && !p.finished) {
-                otherInfo.push(p.character.name + ' is in ' + pSec.name);
+        // ---- 3rd-person perspective tiles ----
+        // We show: 1 tile behind, current tile (big, center), 5 tiles ahead
+        // Tiles shrink as they go into the "distance" (toward top of canvas)
+
+        var tilesAhead = 5;
+        var tilesBehind = 1;
+        var centerY = ch * 0.72;       // current tile vertical center
+        var centerX = cw / 2;
+
+        // Perspective path: tiles go from bottom-center upward, shrinking
+        // Each step forward moves up and shrinks
+        var baseTileW = 160, baseTileH = 100;  // current tile size
+        var shrinkFactor = 0.68;    // each step ahead shrinks by this
+        var yStep = 70;
+
+        // Collect tiles to draw (back to front for proper overlap)
+        var tilesToDraw = [];
+        for (var offset = -tilesBehind; offset <= tilesAhead; offset++) {
+            var tileIdx = currentPos + offset;
+            if (tileIdx < 0 || tileIdx >= boardSpaces.length) continue;
+
+            var dist = offset; // negative = behind, 0 = current, positive = ahead
+            var scale, ty, alpha;
+
+            if (dist < 0) {
+                // Behind: below center, slightly smaller, faded
+                scale = Math.pow(shrinkFactor, 0.5);
+                ty = centerY + Math.abs(dist) * yStep * 0.6;
+                alpha = 0.35;
+            } else if (dist === 0) {
+                // Current tile: full size, center
+                scale = 1.0;
+                ty = centerY;
+                alpha = 1.0;
+            } else {
+                // Ahead: shrinks into distance
+                scale = Math.pow(shrinkFactor, dist);
+                ty = centerY - dist * yStep * Math.pow(0.82, dist - 1);
+                alpha = Math.max(0.25, 1.0 - dist * 0.14);
             }
-        });
-        if (otherInfo.length > 0) {
-            ctx.font = '11px Arial';
-            ctx.fillStyle = 'rgba(255,255,255,0.5)';
-            ctx.textAlign = 'right';
-            ctx.fillText(otherInfo.join(' | '), canvas.width - 10, 22);
-            ctx.textAlign = 'center';
+
+            tilesToDraw.push({
+                idx: tileIdx,
+                offset: dist,
+                x: centerX,
+                y: ty,
+                w: baseTileW * scale,
+                h: baseTileH * scale,
+                scale: scale,
+                alpha: alpha
+            });
         }
 
-        // Path lines (within section only)
-        ctx.strokeStyle = 'rgba(255,255,255,0.3)';
-        ctx.lineWidth = 3;
-        ctx.setLineDash([6, 4]);
-        for (var i = 0; i < sectionTiles - 1; i++) {
-            var a = getTilePos(i, sectionTiles), b = getTilePos(i + 1, sectionTiles);
+        // Sort: draw furthest-away first (smallest scale = deepest in scene)
+        tilesToDraw.sort(function(a, b) { return a.scale - b.scale; });
+
+        // Draw perspective road/path lines
+        ctx.save();
+        ctx.strokeStyle = 'rgba(255,255,255,0.15)';
+        ctx.lineWidth = 2;
+        ctx.setLineDash([8, 6]);
+        for (var i = 0; i < tilesToDraw.length - 1; i++) {
+            var a = tilesToDraw[i], b = tilesToDraw[i + 1];
             ctx.beginPath();
             ctx.moveTo(a.x, a.y);
             ctx.lineTo(b.x, b.y);
             ctx.stroke();
         }
         ctx.setLineDash([]);
+        ctx.restore();
 
-        // Tiles (only current section, re-indexed from 0)
-        for (var i = 0; i < sectionTiles; i++) {
-            var absIdx = section.start + i;
-            var pos = getTilePos(i, sectionTiles);
-            var space = boardSpaces[absIdx];
-            var hasPlayer = players.some(function(p) { return Math.floor(p.position) === absIdx; });
+        // Draw each tile
+        tilesToDraw.forEach(function(tile) {
+            var space = boardSpaces[tile.idx];
+            var isCurrent = (tile.offset === 0);
 
-            ctx.fillStyle = 'rgba(0,0,0,0.25)';
-            roundRect(ctx, pos.x - pos.w/2 + 2, pos.y - pos.h/2 + 2, pos.w, pos.h, 6);
+            ctx.save();
+            ctx.globalAlpha = tile.alpha;
+
+            var tx = tile.x - tile.w / 2;
+            var ty = tile.y - tile.h / 2;
+
+            // Shadow
+            ctx.fillStyle = 'rgba(0,0,0,0.3)';
+            roundRect(ctx, tx + 3, ty + 3, tile.w, tile.h, 10 * tile.scale);
             ctx.fill();
 
-            if (hasPlayer) { ctx.shadowColor = '#FFD700'; ctx.shadowBlur = 12; }
+            // Tile body
+            var hasPlayer = players.some(function(p) { return Math.floor(p.position) === tile.idx; });
+            if (hasPlayer && isCurrent) {
+                ctx.shadowColor = '#FFD700';
+                ctx.shadowBlur = 20;
+            }
             ctx.fillStyle = space.color;
-            roundRect(ctx, pos.x - pos.w/2, pos.y - pos.h/2, pos.w, pos.h, 6);
+            roundRect(ctx, tx, ty, tile.w, tile.h, 10 * tile.scale);
             ctx.fill();
-            ctx.shadowColor = 'transparent'; ctx.shadowBlur = 0;
+            ctx.shadowColor = 'transparent';
+            ctx.shadowBlur = 0;
 
-            ctx.strokeStyle = hasPlayer ? '#FFD700' : 'rgba(0,0,0,0.2)';
-            ctx.lineWidth = hasPlayer ? 2 : 1;
-            roundRect(ctx, pos.x - pos.w/2, pos.y - pos.h/2, pos.w, pos.h, 6);
+            // Border
+            ctx.strokeStyle = isCurrent ? '#FFD700' : (hasPlayer ? '#FFD700' : 'rgba(0,0,0,0.2)');
+            ctx.lineWidth = isCurrent ? 3 : (hasPlayer ? 2 : 1);
+            roundRect(ctx, tx, ty, tile.w, tile.h, 10 * tile.scale);
             ctx.stroke();
 
-            // Pulse glow on just-landed tile
-            if (absIdx === pulseTileIdx) {
+            // Pulse glow on landed tile
+            if (tile.idx === pulseTileIdx) {
                 ctx.save();
                 ctx.shadowColor = '#ffffff';
                 ctx.shadowBlur = 18 + pulseTileAlpha * 28;
                 ctx.strokeStyle = 'rgba(255,255,255,' + (0.35 + pulseTileAlpha * 0.65) + ')';
                 ctx.lineWidth = 3.5;
-                roundRect(ctx, pos.x - pos.w/2, pos.y - pos.h/2, pos.w, pos.h, 6);
+                roundRect(ctx, tx, ty, tile.w, tile.h, 10 * tile.scale);
                 ctx.stroke();
                 ctx.restore();
             }
 
+            // Icon
+            var iconSize = Math.round(32 * tile.scale);
             ctx.shadowColor = 'rgba(255,255,255,0.8)';
-            ctx.shadowBlur = 6;
-            ctx.font = '20px Arial';
+            ctx.shadowBlur = 6 * tile.scale;
+            ctx.font = iconSize + 'px Arial';
             ctx.textAlign = 'center';
             ctx.textBaseline = 'middle';
-            ctx.fillText(space.icon || '', pos.x, pos.y - 10);
-            ctx.shadowColor = 'transparent'; ctx.shadowBlur = 0;
-            ctx.fillStyle = '#000';
-            ctx.font = 'bold 8px Arial';
-            ctx.fillText(space.label.substring(0, 14), pos.x, pos.y + 10);
-            ctx.fillStyle = 'rgba(0,0,0,0.35)';
-            ctx.font = '8px Arial';
-            ctx.fillText('Age ' + space.age, pos.x, pos.y + 20);
-        }
+            ctx.fillText(space.icon || '', tile.x, tile.y - tile.h * 0.15);
+            ctx.shadowColor = 'transparent';
+            ctx.shadowBlur = 0;
 
-        // Players (only those in current section)
-        players.forEach(function(player, i) {
-            var tileIdx = Math.min(Math.floor(player.position), boardSpaces.length - 1);
-            if (tileIdx < section.start || tileIdx > section.end) return;
-            var localIdx = tileIdx - section.start;
-            var pos = getTilePos(localIdx, sectionTiles);
-            var sameTile = players.filter(function(p, j) { return j < i && Math.floor(p.position) === tileIdx; }).length;
-            var offsetX = sameTile * 14 - 7;
-            drawCharacter(ctx, player.character, pos.x + offsetX, pos.y - 36, player.mood || 'default');
+            // Label
+            ctx.fillStyle = '#000';
+            var labelSize = Math.max(8, Math.round(13 * tile.scale));
+            ctx.font = 'bold ' + labelSize + 'px Arial';
+            ctx.fillText(space.label.substring(0, 20), tile.x, tile.y + tile.h * 0.2);
+
+            // Age + tile number
+            var subSize = Math.max(7, Math.round(10 * tile.scale));
+            ctx.fillStyle = 'rgba(0,0,0,0.45)';
+            ctx.font = subSize + 'px Arial';
+            ctx.fillText('Age ' + space.age + '  •  Tile ' + (tile.idx + 1) + '/50', tile.x, tile.y + tile.h * 0.38);
+
+            // Description on current tile only
+            if (isCurrent && space.desc) {
+                ctx.fillStyle = 'rgba(0,0,0,0.6)';
+                ctx.font = '10px Arial';
+                // Word-wrap description
+                var words = space.desc.split(' ');
+                var line = '', lineY = tile.y + tile.h * 0.38 + 14;
+                var maxW = tile.w - 20;
+                words.forEach(function(word) {
+                    var test = line + word + ' ';
+                    if (ctx.measureText(test).width > maxW && line.length > 0) {
+                        ctx.fillText(line.trim(), tile.x, lineY);
+                        line = word + ' ';
+                        lineY += 12;
+                    } else {
+                        line = test;
+                    }
+                });
+                if (line.trim()) ctx.fillText(line.trim(), tile.x, lineY);
+            }
+
+            ctx.restore();
+
+            // Draw characters on this tile
+            if (hasPlayer) {
+                var charCount = 0;
+                players.forEach(function(player, pi) {
+                    var pIdx = Math.min(Math.floor(player.position), boardSpaces.length - 1);
+                    if (pIdx !== tile.idx) return;
+                    var charScale = tile.scale;
+                    var offsetX = charCount * 20 * charScale - 10 * charScale;
+                    drawCharacterScaled(ctx, player.character, tile.x + offsetX, tile.y - tile.h / 2 - 10 * charScale, player.mood || 'default', charScale);
+                    charCount++;
+                });
+            }
         });
     }
 
-    function drawCharacter(ctx, char, x, y, mood) {
+    function drawCharacterScaled(ctx, char, x, y, mood, scale) {
         ctx.save();
         ctx.translate(x, y);
+        ctx.scale(scale, scale);
         var isGirl = char.gender === 'girl';
         // Torso / clothes
         ctx.fillStyle = char.clothes;
@@ -1734,6 +1935,10 @@
         ctx.strokeStyle = '#000'; ctx.lineWidth = 2;
         ctx.strokeText(char.name, 0, -22); ctx.fillText(char.name, 0, -22);
         ctx.restore();
+    }
+
+    function drawCharacter(ctx, char, x, y, mood) {
+        drawCharacterScaled(ctx, char, x, y, mood, 1);
     }
 
     // ========== SPINNER (FIXED) ==========
@@ -2283,7 +2488,12 @@
         }
         checkAchievements(player);
         updateUI();
-        endTurnAfterDelay();
+        // If position changed (ace or fail), activate the new tile after a delay
+        if (grade < 6 || grade === 10) {
+            setTimeout(function() { handleLanding(); }, 2500);
+        } else {
+            endTurnAfterDelay();
+        }
     }
 
     // -------- CHANCE CARDS --------
