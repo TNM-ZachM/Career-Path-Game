@@ -1926,17 +1926,17 @@
 
     // ========== TILE VIDEOS ==========
     var tileVideos = {
-        4:  'Career Path Game Videos/Tile 4 Gold Star.mp4',
-        5:  'Career Path Game Videos/Tile 5 Career Day.mp4',
-        8:  'Career Path Game Videos/Tile 8 Field Trip.mp4',
-        13: 'Career Path Game Videos/Tile 13 Dream Job Essay.mp4',
-        20: 'Career Path Game Videos/Tile 20 Career Aptitude.mp4',
-        26: 'Career Path Game Videos/Tile 26 Job Shadow Day.mp4',
-        28: 'Career Path Game Videos/Tile 28 Class President!.mp4',
-        34: 'Career Path Game Videos/Tile 34 Career Fair.mp4',
-        40: 'Career Path Game Videos/Tile 40 Internship Offer!.mp4',
-        46: 'Career Path Game Videos/Tile 46 Senior Mentor.mp4',
-        47: 'Career Path Game Videos/Tile 47 Prom Night!.mp4'
+        4:  'Career%20Path%20Game%20Videos/Tile%204%20Gold%20Star.mp4',
+        5:  'Career%20Path%20Game%20Videos/Tile%205%20Career%20Day.mp4',
+        8:  'Career%20Path%20Game%20Videos/Tile%208%20Field%20Trip.mp4',
+        13: 'Career%20Path%20Game%20Videos/Tile%2013%20Dream%20Job%20Essay.mp4',
+        20: 'Career%20Path%20Game%20Videos/Tile%2020%20Career%20Aptitude.mp4',
+        26: 'Career%20Path%20Game%20Videos/Tile%2026%20Job%20Shadow%20Day.mp4',
+        28: 'Career%20Path%20Game%20Videos/Tile%2028%20Class%20President!.mp4',
+        34: 'Career%20Path%20Game%20Videos/Tile%2034%20Career%20Fair.mp4',
+        40: 'Career%20Path%20Game%20Videos/Tile%2040%20Internship%20Offer!.mp4',
+        46: 'Career%20Path%20Game%20Videos/Tile%2046%20Senior%20Mentor.mp4',
+        47: 'Career%20Path%20Game%20Videos/Tile%2047%20Prom%20Night!.mp4'
     };
 
     function playVideoThenContinue(tileIndex, callback) {
@@ -1945,20 +1945,22 @@
         var overlay = document.getElementById('video-overlay');
         var vid = document.getElementById('tile-video');
         var skipBtn = document.getElementById('video-skip-btn');
-        vid.src = src;
         overlay.classList.add('active');
-        vid.load();
-        vid.play().catch(function() {});
+        vid.src = src;
         function finish() {
             vid.pause();
             vid.src = '';
             overlay.classList.remove('active');
             skipBtn.removeEventListener('click', finish);
             vid.removeEventListener('ended', finish);
+            vid.removeEventListener('error', finish);
             callback();
         }
         vid.addEventListener('ended', finish, { once: true });
+        vid.addEventListener('error', finish, { once: true });
         skipBtn.addEventListener('click', finish, { once: true });
+        vid.load();
+        vid.play().catch(function() {});
     }
 
     function handleLanding() {
