@@ -486,6 +486,40 @@
         .trade-card-details { font-size:11px; line-height:1.65; opacity:0.88; }
         .trade-card-scorebar { margin-top:8px; background:rgba(0,0,0,0.2); border-radius:6px; height:8px; overflow:hidden; }
         .trade-card-scorefill { height:8px; border-radius:6px; background:rgba(255,255,255,0.72); transition:width 0.6s ease; }
+
+        /* ===== VIDEO OVERLAY ===== */
+        #video-overlay {
+            display: none;
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            background: rgba(0,0,0,0.88);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+        }
+        #video-overlay.active { display: flex; }
+        #tile-video {
+            max-width: 90%;
+            max-height: 80vh;
+            border-radius: 12px;
+            box-shadow: 0 8px 40px rgba(0,0,0,0.6);
+        }
+        #video-skip-btn {
+            margin-top: 16px;
+            padding: 8px 28px;
+            background: rgba(255,255,255,0.15);
+            color: #fff;
+            border: 1px solid rgba(255,255,255,0.35);
+            border-radius: 20px;
+            font-size: 13px;
+            font-weight: 700;
+            cursor: pointer;
+            font-family: 'Poppins', sans-serif;
+            transition: background 0.2s;
+        }
+        #video-skip-btn:hover { background: rgba(255,255,255,0.28); }
     </style>
 </head>
 <body>
@@ -565,6 +599,11 @@
             <p id="modal-desc"></p>
             <div id="modal-buttons"></div>
         </div>
+    </div>
+
+    <div id="video-overlay">
+        <video id="tile-video" muted playsinline></video>
+        <button id="video-skip-btn">Skip &#9654;</button>
     </div>
 
     <script>
@@ -1885,6 +1924,43 @@
         }
     }
 
+    // ========== TILE VIDEOS ==========
+    var tileVideos = {
+        4:  'Career Path Game Videos/Tile 4 Gold Star.mp4',
+        5:  'Career Path Game Videos/Tile 5 Career Day.mp4',
+        8:  'Career Path Game Videos/Tile 8 Field Trip.mp4',
+        13: 'Career Path Game Videos/Tile 13 Dream Job Essay.mp4',
+        20: 'Career Path Game Videos/Tile 20 Career Aptitude.mp4',
+        26: 'Career Path Game Videos/Tile 26 Job Shadow Day.mp4',
+        28: 'Career Path Game Videos/Tile 28 Class President!.mp4',
+        34: 'Career Path Game Videos/Tile 34 Career Fair.mp4',
+        40: 'Career Path Game Videos/Tile 40 Internship Offer!.mp4',
+        46: 'Career Path Game Videos/Tile 46 Senior Mentor.mp4',
+        47: 'Career Path Game Videos/Tile 47 Prom Night!.mp4'
+    };
+
+    function playVideoThenContinue(tileIndex, callback) {
+        var src = tileVideos[tileIndex];
+        if (!src) { callback(); return; }
+        var overlay = document.getElementById('video-overlay');
+        var vid = document.getElementById('tile-video');
+        var skipBtn = document.getElementById('video-skip-btn');
+        vid.src = src;
+        overlay.classList.add('active');
+        vid.load();
+        vid.play().catch(function() {});
+        function finish() {
+            vid.pause();
+            vid.src = '';
+            overlay.classList.remove('active');
+            skipBtn.removeEventListener('click', finish);
+            vid.removeEventListener('ended', finish);
+            callback();
+        }
+        vid.addEventListener('ended', finish, { once: true });
+        skipBtn.addEventListener('click', finish, { once: true });
+    }
+
     function handleLanding() {
         var player = players[currentPlayer];
         var space = boardSpaces[player.position];
@@ -1905,42 +1981,44 @@
         lastBoardSection = currSectionName;
         checkAchievements(player);
 
-        switch (space.type) {
-            case 'challenge':
-                player.mood = 'nervous';
-                drawBoard();
-                showInteractiveChallenge(space);
-                break;
-            case 'chance':
-                drawChanceCard(space);
-                break;
-            case 'pathsplit':
-                if (space.dynamic) {
-                    showDynamicLifePath(space);
-                } else {
-                    showPathChoice(space);
-                }
-                break;
-            case 'career':
-                handleCareerTile(space);
-                break;
-            case 'reward':
-            case 'milestone':
-                if (space.effect) applyEffect(player, space.effect);
-                showEventCard(space, true);
-                endTurnAfterDelay();
-                break;
-            case 'end':
-                // Player graduated! But game continues for others.
-                showEventCard(space, true);
-                endTurnAfterDelay();
-                break;
-            default:
-                showEventCard(space, true);
-                endTurnAfterDelay();
-                break;
-        }
-        updateUI();
+        playVideoThenContinue(player.position, function() {
+            switch (space.type) {
+                case 'challenge':
+                    player.mood = 'nervous';
+                    drawBoard();
+                    showInteractiveChallenge(space);
+                    break;
+                case 'chance':
+                    drawChanceCard(space);
+                    break;
+                case 'pathsplit':
+                    if (space.dynamic) {
+                        showDynamicLifePath(space);
+                    } else {
+                        showPathChoice(space);
+                    }
+                    break;
+                case 'career':
+                    handleCareerTile(space);
+                    break;
+                case 'reward':
+                case 'milestone':
+                    if (space.effect) applyEffect(player, space.effect);
+                    showEventCard(space, true);
+                    endTurnAfterDelay();
+                    break;
+                case 'end':
+                    // Player graduated! But game continues for others.
+                    showEventCard(space, true);
+                    endTurnAfterDelay();
+                    break;
+                default:
+                    showEventCard(space, true);
+                    endTurnAfterDelay();
+                    break;
+            }
+            updateUI();
+        });
     }
 
     // -------- INTERACTIVE CHALLENGES --------
