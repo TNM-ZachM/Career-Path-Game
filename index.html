@@ -1962,6 +1962,10 @@
         var skipBtn = document.getElementById('video-skip-btn');
 
         var done = false;
+        var wasMusicMuted = musicMuted;
+        if (musicGain && musicPlaying && !musicMuted) {
+            try { musicGain.gain.setValueAtTime(0, audioContext.currentTime); } catch(e) {}
+        }
         function finish() {
             if (done) return;
             done = true;
@@ -1972,6 +1976,9 @@
             skipBtn.removeEventListener('click', finish);
             vid.removeEventListener('ended', finish);
             vid.removeEventListener('error', onError);
+            if (musicGain && musicPlaying && !wasMusicMuted) {
+                try { musicGain.gain.setValueAtTime(1, audioContext.currentTime); } catch(e) {}
+            }
             callback();
         }
         function onError() {
@@ -1984,6 +1991,9 @@
             overlay.classList.remove('active');
             skipBtn.removeEventListener('click', finish);
             vid.removeEventListener('ended', finish);
+            if (musicGain && musicPlaying && !wasMusicMuted) {
+                try { musicGain.gain.setValueAtTime(1, audioContext.currentTime); } catch(e) {}
+            }
             callback();
         }
 
